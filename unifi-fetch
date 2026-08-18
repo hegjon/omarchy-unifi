@@ -125,7 +125,32 @@ if [[ -n $gateway_id ]]; then
   fi
 fi
 
+# WAN state: the documented API only names the WAN links, so their names
+# come from /wans and everything else — status, address, ISP, latency,
+# per-link availability — from the classic stat/health, which is small and
+# changes every heartbeat, so it is not cached. Both are optional: without
+# them the gateway block simply has no WAN lines.
+wans=null
+health=null
+if [[ -n $gateway_id ]]; then
+  unifi_http "/sites/$site_id/wans?limit=50" "$API_KEY"
+  if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
+    wans=$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")
+  fi
+  site_name=$(jq -r '.internalReference // empty' <<<"$site")
+  if [[ -n $site_name ]]; then
+    UNIFI_API_BASE_SAVED="$UNIFI_API_BASE"
+    UNIFI_API_BASE="$(unifi_classic_base)"
+    unifi_http "/api/s/$site_name/stat/health" "$API_KEY"
+    UNIFI_API_BASE="$UNIFI_API_BASE_SAVED"
+    if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
+      health=$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")
+    fi
+  fi
+fi
+
 unset API_KEY
 
-jq --argjson stats "$stats" --argjson report "$report" '. + {stats: $stats, report: $report}' <<<"$raw" |
+jq --argjson stats "$stats" --argjson report "$report" --argjson wans "$wans" --argjson health "$health" \
+  '. + {stats: $stats, report: $report, wans: $wans, health: $health}' <<<"$raw" |
   jq -f "$NORMALIZE" 2>/dev/null || die "Could not interpret the controller response"

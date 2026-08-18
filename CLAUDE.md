@@ -54,6 +54,14 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   Any failure leaves `gateway.history` null and the widget graphs its own
   heartbeat samples instead — never let it become fatal.
 
+- WAN state comes from classic `…/api/s/<site>/stat/health` (GET, same key):
+  the `wan` subsystem row has `status, wan_ip, gateways[], isp_name, asn,
+  uptime_stats{WAN, WAN2, …}` (availability, latency_average, uptime or
+  downtime, time_period 86400) and the `www` row has `latency, uptime`. Link
+  names come from the documented `/sites/{id}/wans`, matched by position
+  only when the counts agree. Fetched every poll; small. Failure → `wan`
+  null → no WAN lines.
+
 ## Testing the graph
 
 - The graph needs samples, one per controller heartbeat (~24 s). To see it

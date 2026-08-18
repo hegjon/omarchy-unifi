@@ -21,6 +21,8 @@ Column {
   // Twelve hours of five-minute WAN buckets from the controller, {t, rxBps,
   // txBps}, or null when that report could not be fetched.
   property var report: null
+  // WAN state from the controller's health report, or null when unavailable.
+  property var wan: null
 
   // What the graphs plot: the controller's report when it has one, since it
   // is there in full the moment the panel opens and survives a shell restart;
@@ -197,5 +199,81 @@ Column {
     color: stats.host.detailColor
     font.family: Style.font.family
     font.pixelSize: Style.font.caption
+  }
+
+  // WAN: who the gateway is talking to and how each link is doing. The
+  // primary link's address and ISP head the section; every link then gets a
+  // row of its own, since a second WAN that is down is worth seeing.
+  Text {
+    width: parent.width
+    visible: stats.wan !== null && stats.wan !== undefined
+    elide: Text.ElideRight
+    text: {
+      var w = stats.wan
+      if (!w) return ""
+      var parts = ["WAN"]
+      if (w.ip) parts.push(w.ip + (w.gateway ? " via " + w.gateway : ""))
+      return parts.join("  ·  ")
+    }
+    color: Color.popups.text
+    font.family: Style.font.family
+    font.pixelSize: Style.font.caption
+  }
+
+  // ISP names run long ("Drustvo za telekomunikacije MTEL DOO"), so this
+  // wraps rather than being cut off after the address.
+  Text {
+    width: parent.width
+    visible: !!(stats.wan && stats.wan.isp)
+    wrapMode: Text.WordWrap
+    text: stats.wan && stats.wan.isp
+      ? stats.wan.isp + (stats.wan.asn ? "  ·  AS" + stats.wan.asn : "")
+      : ""
+    color: stats.host.detailColor
+    font.family: Style.font.family
+    font.pixelSize: Style.font.caption
+  }
+
+  Repeater {
+    model: stats.wan && stats.wan.links ? stats.wan.links : []
+
+    Row {
+      id: linkRow
+      required property var modelData
+      width: parent.width
+      spacing: Style.space(8)
+
+      readonly property bool up: linkRow.modelData.up === true
+
+      Text {
+        id: linkDetail
+        width: parent.width - linkState.implicitWidth - Style.space(8)
+        elide: Text.ElideRight
+        text: {
+          var l = linkRow.modelData
+          var parts = [l.name || l.key]
+          if (linkRow.up) {
+            if (l.latencyMs !== null && l.latencyMs !== undefined) parts.push(Math.round(l.latencyMs) + " ms")
+            if (l.uptimeSec) parts.push("up " + stats.formatUptime(l.uptimeSec))
+            if (l.availabilityPct !== null && l.availabilityPct !== undefined)
+              parts.push((Math.round(l.availabilityPct * 10) / 10) + "% last 24 h")
+          } else if (l.downtimeSec) {
+            parts.push("down for " + stats.formatUptime(l.downtimeSec))
+          }
+          return parts.join("  ·  ")
+        }
+        color: stats.host.detailColor
+        font.family: Style.font.family
+        font.pixelSize: Style.font.caption
+      }
+
+      Text {
+        id: linkState
+        text: linkRow.up ? "Online" : "Down"
+        color: linkRow.up ? Color.popups.text : Color.urgent
+        font.family: Style.font.family
+        font.pixelSize: Style.font.caption
+      }
+    }
   }
 }

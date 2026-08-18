@@ -159,6 +159,37 @@ else
 fi
 
 echo
+echo "WAN state"
+check "no health report means no WAN block" network.json '.gateway.wan == null'
+with_wan=$(jq --slurpfile h "$TEST_DIR/fixtures/health.json" --slurpfile w "$TEST_DIR/fixtures/wans.json" \
+  '. + {health: $h[0], wans: $w[0]}' "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" 2>&1)
+wan_check() { # name filter
+  if jq -e "$2" >/dev/null 2>&1 <<<"$with_wan"; then printf '  ok    %s\n' "$1"; (( passed++ ))
+  else printf '  FAIL  %s\n' "$1"; (( failed++ )); fi
+}
+wan_check "reads status, address and upstream gateway" \
+  '.gateway.wan.status == "ok" and .gateway.wan.ip == "203.0.113.7" and .gateway.wan.gateway == "203.0.113.1"'
+wan_check "reads the ISP and its ASN" '.gateway.wan.isp == "Example ISP" and .gateway.wan.asn == 64496'
+wan_check "takes latency and uptime from the www subsystem" \
+  '.gateway.wan.latencyMs == 14 and .gateway.wan.uptimeSec == 362863'
+wan_check "lists every link the controller monitors, in order" \
+  '[.gateway.wan.links[].key] == ["WAN", "WAN2"]'
+wan_check "names links from /wans when the counts agree" \
+  '[.gateway.wan.links[].name] == ["Fibre", "LTE backup"]'
+wan_check "a link with uptime and availability is up" \
+  '.gateway.wan.links[0].up == true and .gateway.wan.links[0].availabilityPct == 99.5 and .gateway.wan.links[0].latencyMs == 8'
+wan_check "a link with only downtime is down" \
+  '.gateway.wan.links[1].up == false and .gateway.wan.links[1].downtimeSec == 444363'
+# Names by position are only trustworthy when there is one per link.
+if jq --slurpfile h "$TEST_DIR/fixtures/health.json" '. + {health: $h[0], wans: [{"name":"Only one"}]}' \
+     "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" |
+   jq -e '[.gateway.wan.links[].name] == ["WAN", "WAN2"]' >/dev/null 2>&1; then
+  printf '  ok    falls back to the controller'"'"'s keys when the name count differs\n'; (( passed++ ))
+else
+  printf '  FAIL  falls back to the controller'"'"'s keys when the name count differs\n'; (( failed++ ))
+fi
+
+echo
 echo "degenerate input"
 for payload in '{}' '{"devices":[]}' '{"devices":[{}],"clients":[{}]}'; do
   if out=$(jq -f "$NORMALIZE" <<<"$payload" 2>&1); then

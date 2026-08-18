@@ -80,8 +80,44 @@ def report_history($mac):
        }))
   end;
 
+# WAN state from the classic stat/health "wan" subsystem, with link names from
+# the documented /wans list. uptime_stats is keyed WAN, WAN2, … in the same
+# order the controller lists the links, so the names are matched by position
+# when the counts agree and the key is used as the name otherwise.
+def wan_state:
+  if (.health // null) == null then null else
+    ((.health // []) | map(select(.subsystem == "wan")) | .[0] // null) as $wan
+    | ((.health // []) | map(select(.subsystem == "www")) | .[0] // null) as $www
+    | if $wan == null then null else
+      ((.wans // []) | map(.name // "")) as $names
+      | (($wan.uptime_stats // {}) | to_entries | sort_by(.key)) as $links
+      | {
+          status: ($wan.status // "unknown"),
+          ip: ($wan.wan_ip // null),
+          gateway: (($wan.gateways // [])[0] // null),
+          isp: ($wan.isp_name // $wan.isp_organization // null),
+          asn: as_number($wan.asn),
+          latencyMs: as_number($www.latency),
+          uptimeSec: as_number($www.uptime),
+          links: ($links | to_entries | map(
+            .key as $i | .value.key as $key | .value.value as $u
+            | {
+                key: $key,
+                name: (if ($names | length) == ($links | length) then ($names[$i] // $key) else $key end),
+                up: (($u.uptime // 0) > 0 and (($u.downtime // 0) == 0 or ($u.availability // 0) > 0)),
+                availabilityPct: as_number($u.availability),
+                latencyMs: as_number($u.latency_average),
+                uptimeSec: as_number($u.uptime),
+                downtimeSec: as_number($u.downtime),
+                periodSec: as_number($u.time_period)
+              }))
+        }
+      end
+  end;
+
 (.site // {}) as $site
 | gateway_stats as $stats
+| wan_state as $wan
 | (.clients // []) as $clients
 | ($clients | map(select(.uplinkDeviceId != null)) | group_by(.uplinkDeviceId)
    | map({key: .[0].uplinkDeviceId, value: length}) | from_entries) as $clients_by_device
@@ -109,7 +145,7 @@ def report_history($mac):
     # The first gateway is the one whose statistics are fetched and graphed.
     gateway: (if $gateway == null then null
               else {id: $gateway.id, name: $gateway.name, stats: $stats,
-                    history: report_history($gateway.mac)} end),
+                    history: report_history($gateway.mac), wan: $wan} end),
     summary: {
       devices: ($devices | length),
       online: ($devices | map(select(.bucket == "online")) | length),

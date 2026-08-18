@@ -551,6 +551,7 @@ Panel {
               ? root.gateway.stats : null
             rateHistory: root.rateHistory
             rateReport: root.gateway ? (root.gateway.history || null) : null
+            wanState: root.gateway ? (root.gateway.wan || null) : null
           }
         }
 

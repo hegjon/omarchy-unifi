@@ -20,6 +20,7 @@ Column {
   property var gatewayStats: null
   property var rateHistory: []
   property var rateReport: null
+  property var wanState: null
 
   spacing: Style.space(6)
 
@@ -100,6 +101,7 @@ Column {
     latest: row.gatewayStats
     history: row.rateHistory
     report: row.rateReport
+    wan: row.wanState
   }
 
   // The gateway block is a section of its own; a rule keeps the device list
