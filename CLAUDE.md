@@ -43,6 +43,17 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   `uplinkDeviceId`); `/info` returns
   `{"applicationVersion": …}`. A gateway's `ipAddress` is its WAN address.
 
+## The report API
+
+- `unifi-fetch` also POSTs to the classic
+  `…/proxy/network/api/s/<internalReference>/stat/report/5minutes.gw` with
+  `{attrs:[time, wan-rx_bytes, wan-tx_bytes], start, end}` (ms). It accepts
+  the same API key. Rows are per gateway MAC (`gw`); bytes are per 5-min
+  bucket, so rate = bytes × 8 / 300. Retention here: 5minutes ≈ 24 h, hourly
+  ≈ 7 d, daily ≈ 3 months. Cached 4 min in `$XDG_RUNTIME_DIR/omarchy-unifi/`.
+  Any failure leaves `gateway.history` null and the widget graphs its own
+  heartbeat samples instead — never let it become fatal.
+
 ## Testing the graph
 
 - The graph needs samples, one per controller heartbeat (~24 s). To see it

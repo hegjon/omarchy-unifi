@@ -1,0 +1,6 @@
+[
+  {"time":1787073900000,"wan-rx_bytes":17566366.72,"wan-tx_bytes":9500268.33,"gw":"aa:bb:cc:00:00:04","o":"gw","oid":"aa:bb:cc:00:00:04"},
+  {"time":1787074200000,"wan-rx_bytes":3750000,"wan-tx_bytes":375000,"gw":"aa:bb:cc:00:00:04","o":"gw","oid":"aa:bb:cc:00:00:04"},
+  {"time":1787074500000,"wan-rx_bytes":999,"wan-tx_bytes":1,"gw":"ff:ff:ff:ff:ff:ff","o":"gw","oid":"ff:ff:ff:ff:ff:ff"},
+  {"time":1787073600000,"wan-rx_bytes":0,"wan-tx_bytes":0,"gw":"aa:bb:cc:00:00:04","o":"gw","oid":"aa:bb:cc:00:00:04"}
+]

@@ -98,6 +98,26 @@ unifi_http() { # path-with-query api-key
   UNIFI_HTTP_BODY=$(sed '$d' <<<"$response")
 }
 
+# A POST with a JSON body to an absolute URL, same conventions as unifi_http.
+# Used for the classic report API, which lives beside the Integration API
+# rather than under it.
+unifi_http_post() { # url json-body api-key
+  local config response
+  config=$(printf 'url = "%s"\nheader = "X-API-KEY: %s"\nheader = "Accept: application/json"\nheader = "Content-Type: application/json"\ndata = %s\nsilent\nshow-error\n' \
+    "$1" "$3" "$2")
+  [[ $UNIFI_INSECURE == 1 ]] && config+=$'\ninsecure'
+  response=$(printf '%s\n' "$config" | curl --config - -m 20 -w '\n%{http_code}' 2>&1)
+  UNIFI_HTTP_CODE=$(tail -n1 <<<"$response")
+  UNIFI_HTTP_BODY=$(sed '$d' <<<"$response")
+}
+
+# The classic Network API root that pairs with the Integration API base:
+# …/proxy/network/integration/v1 → …/proxy/network, and on a self-hosted
+# controller https://host:8443/integration/v1 → https://host:8443.
+unifi_classic_base() {
+  printf '%s' "${UNIFI_API_BASE%/integration/v1}"
+}
+
 # Turn a non-200 answer into a message the panel can show.
 unifi_describe_http_failure() {
   case "$UNIFI_HTTP_CODE" in

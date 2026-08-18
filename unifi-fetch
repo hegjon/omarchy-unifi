@@ -100,7 +100,32 @@ if [[ -n $gateway_id ]]; then
   fi
 fi
 
+# Twelve hours of WAN traffic in five-minute buckets, from the classic report
+# API the UniFi UI's own charts read. It is undocumented, so a failure here is
+# never fatal: `report` stays null and the widget graphs its own samples.
+# The buckets only move every five minutes, so the answer is cached for four
+# and every poll in between reuses it.
+report=null
+report_cache="${XDG_RUNTIME_DIR:-/tmp}/omarchy-unifi/report-$site_id.json"
+if [[ -n $gateway_id ]]; then
+  if [[ -f $report_cache ]] && (( $(date +%s) - $(stat -c %Y "$report_cache") < 240 )); then
+    report=$(cat "$report_cache")
+  else
+    site_name=$(jq -r '.internalReference // empty' <<<"$site")
+    now_ms=$(( $(date +%s) * 1000 ))
+    body=$(jq -cn --argjson end "$now_ms" \
+      '{attrs: ["time", "wan-rx_bytes", "wan-tx_bytes"], start: ($end - 12 * 3600 * 1000), end: $end}')
+    if [[ -n $site_name ]]; then
+      unifi_http_post "$(unifi_classic_base)/api/s/$site_name/stat/report/5minutes.gw" "$body" "$API_KEY"
+      if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
+        report=$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")
+        mkdir -p "$(dirname "$report_cache")" && printf '%s' "$report" >"$report_cache"
+      fi
+    fi
+  fi
+fi
+
 unset API_KEY
 
-jq --argjson stats "$stats" '. + {stats: $stats}' <<<"$raw" |
+jq --argjson stats "$stats" --argjson report "$report" '. + {stats: $stats, report: $report}' <<<"$raw" |
   jq -f "$NORMALIZE" 2>/dev/null || die "Could not interpret the controller response"

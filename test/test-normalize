@@ -128,6 +128,37 @@ else
 fi
 
 echo
+echo "gateway report"
+check "no report means no history, so the widget falls back to its own samples" network.json \
+  '.gateway.history == null'
+with_report=$(jq --slurpfile rp "$TEST_DIR/fixtures/gateway-report.json" '. + {report: $rp[0]}' \
+  "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" 2>&1)
+if jq -e '(.gateway.history | length) == 3' >/dev/null 2>&1 <<<"$with_report"; then
+  printf '  ok    keeps only the rows for this gateway'"'"'s MAC\n'; (( passed++ ))
+else
+  printf '  FAIL  keeps only the rows for this gateway'"'"'s MAC\n'; (( failed++ ))
+fi
+if jq -e '[.gateway.history[].t] == [1787073600000, 1787073900000, 1787074200000]' >/dev/null 2>&1 <<<"$with_report"; then
+  printf '  ok    sorts buckets by time\n'; (( passed++ ))
+else
+  printf '  FAIL  sorts buckets by time\n'; (( failed++ ))
+fi
+# 3 750 000 bytes over a 300 s bucket is 100 000 bit/s.
+if jq -e '.gateway.history[2].rxBps == 100000 and .gateway.history[2].txBps == 10000' >/dev/null 2>&1 <<<"$with_report"; then
+  printf '  ok    converts bucket bytes to average bits per second\n'; (( passed++ ))
+else
+  printf '  FAIL  converts bucket bytes to average bits per second\n'; (( failed++ ))
+fi
+# A report whose rows carry some other MAC (a replaced gateway, say) is still
+# better than nothing.
+if jq -f "$NORMALIZE" <<<'{"devices":[{"id":"g","model":"UDM-Pro","macAddress":"00:00:00:00:00:01","state":"ONLINE"}],"report":[{"time":1,"wan-rx_bytes":300,"wan-tx_bytes":0,"gw":"zz"},{"time":2,"wan-rx_bytes":600,"wan-tx_bytes":0,"gw":"zz"}]}' |
+   jq -e '(.gateway.history | length) == 2 and .gateway.history[1].rxBps == 16' >/dev/null 2>&1; then
+  printf '  ok    uses every row when none matches the gateway MAC\n'; (( passed++ ))
+else
+  printf '  FAIL  uses every row when none matches the gateway MAC\n'; (( failed++ ))
+fi
+
+echo
 echo "degenerate input"
 for payload in '{}' '{"devices":[]}' '{"devices":[{}],"clients":[{}]}'; do
   if out=$(jq -f "$NORMALIZE" <<<"$payload" 2>&1); then

@@ -63,6 +63,23 @@ def gateway_stats:
     }
   end;
 
+# Five-minute WAN buckets from the classic report API, turned into average
+# bits per second per bucket. Rows are per gateway (keyed by MAC in `gw`); the
+# caller's gateway is matched when the MAC is known, otherwise all rows count.
+def report_history($mac):
+  if (.report // null) == null then null else
+    (.report
+     | map(select((.time | type) == "number"))
+     | (if $mac != "" and (map(select(.gw == $mac)) | length) > 0
+        then map(select(.gw == $mac)) else . end)
+     | sort_by(.time)
+     | map({
+         t: .time,
+         rxBps: ((as_number(.["wan-rx_bytes"]) // 0) * 8 / 300),
+         txBps: ((as_number(.["wan-tx_bytes"]) // 0) * 8 / 300)
+       }))
+  end;
+
 (.site // {}) as $site
 | gateway_stats as $stats
 | (.clients // []) as $clients
@@ -91,7 +108,8 @@ def gateway_stats:
     devices: $devices,
     # The first gateway is the one whose statistics are fetched and graphed.
     gateway: (if $gateway == null then null
-              else {id: $gateway.id, name: $gateway.name, stats: $stats} end),
+              else {id: $gateway.id, name: $gateway.name, stats: $stats,
+                    history: report_history($gateway.mac)} end),
     summary: {
       devices: ($devices | length),
       online: ($devices | map(select(.bucket == "online")) | length),

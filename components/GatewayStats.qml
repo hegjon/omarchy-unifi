@@ -16,7 +16,19 @@ Column {
 
   required property var host
   property var latest: null
+  // The widget's own heartbeat samples, {t, rx, tx}, oldest first.
   property var history: []
+  // Twelve hours of five-minute WAN buckets from the controller, {t, rxBps,
+  // txBps}, or null when that report could not be fetched.
+  property var report: null
+
+  // What the graphs plot: the controller's report when it has one, since it
+  // is there in full the moment the panel opens and survives a shell restart;
+  // otherwise whatever the widget has collected itself since it started.
+  readonly property bool usingReport: report !== null && report !== undefined && report.length >= 2
+  readonly property var points: usingReport
+    ? report
+    : history.map(function(p) { return { t: p.t, rxBps: p.rx, txBps: p.tx } })
 
   spacing: Style.space(6)
 
@@ -47,16 +59,19 @@ Column {
   readonly property string downGlyph: String.fromCodePoint(0xF0045)   // md-arrow_down
   readonly property string upGlyph: String.fromCodePoint(0xF005D)     // md-arrow_up
 
-  function peakOf(key) {
+  function peakOf(seriesKey) {
     var peak = 0
-    for (var i = 0; i < history.length; i++) peak = Math.max(peak, history[i][key])
+    for (var i = 0; i < points.length; i++) peak = Math.max(peak, points[i][seriesKey])
     return peak
   }
 
   readonly property string spanLabel: {
-    var pts = history
+    var pts = points
     if (pts.length < 2) return ""
     var spanSec = (pts[pts.length - 1].t - pts[0].t) / 1000
+    // The report's buckets are stamped at their start, so twelve hours of
+    // them span 11 h 55 min; round to the hour rather than say 11.9.
+    if (usingReport) return Math.max(1, Math.round((spanSec + 300) / 3600)) + " h, 5-min avg"
     if (spanSec >= 3600) return Math.round(spanSec / 3600 * 10) / 10 + " h"
     return Math.max(1, Math.round(spanSec / 60)) + " min"
   }
@@ -77,8 +92,9 @@ Column {
     width: parent.width
     spacing: Style.space(2)
 
-    readonly property real current: stats.latest ? stats.latest[key === "rx" ? "rxBps" : "txBps"] : NaN
-    readonly property real peak: stats.peakOf(key)
+    readonly property string seriesKey: key === "rx" ? "rxBps" : "txBps"
+    readonly property real current: stats.latest ? stats.latest[seriesKey] : NaN
+    readonly property real peak: stats.peakOf(seriesKey)
 
     Row {
       width: parent.width
@@ -95,7 +111,7 @@ Column {
         width: parent.width - nowText.implicitWidth
         horizontalAlignment: Text.AlignRight
         elide: Text.ElideLeft
-        text: stats.history.length >= 2
+        text: stats.points.length >= 2
           ? "peak " + stats.formatRate(rate.peak) + "  ·  last " + stats.spanLabel
           : "collecting samples…"
         color: stats.host.detailColor
@@ -117,7 +133,7 @@ Column {
       onLineColorChanged: requestPaint()
       Connections {
         target: stats
-        function onHistoryChanged() { graph.requestPaint() }
+        function onPointsChanged() { graph.requestPaint() }
       }
 
       onPaint: {
@@ -136,28 +152,32 @@ Column {
         ctx.lineTo(width, bottom + 0.5)
         ctx.stroke()
 
-        var points = stats.history
+        var points = stats.points
         var count = points.length
         if (count < 2) return
 
         // Never scale below 1 kbit/s, or idle noise fills the box; a little
-        // headroom so the peak does not kiss the top edge.
+        // headroom so the peak does not kiss the top edge. X is time, not
+        // index, so a gap in the report (gateway offline) shows as a gap.
         var peak = Math.max(1000, rate.peak) * 1.08
-        function xAt(index) { return index * (width - 1) / (count - 1) }
+        var t0 = points[0].t, t1 = points[count - 1].t
+        var span = Math.max(1, t1 - t0)
+        function xAt(t) { return (t - t0) * (width - 1) / span }
         function yAt(value) { return bottom - (bottom - top) * Math.max(0, value) / peak }
+        var key = rate.seriesKey
 
         ctx.beginPath()
-        ctx.moveTo(xAt(0), bottom)
-        for (var d = 0; d < count; d++) ctx.lineTo(xAt(d), yAt(points[d][rate.key]))
-        ctx.lineTo(xAt(count - 1), bottom)
+        ctx.moveTo(xAt(t0), bottom)
+        for (var d = 0; d < count; d++) ctx.lineTo(xAt(points[d].t), yAt(points[d][key]))
+        ctx.lineTo(xAt(t1), bottom)
         ctx.closePath()
         ctx.fillStyle = fillColor
         ctx.fill()
 
         ctx.beginPath()
         for (var l = 0; l < count; l++) {
-          if (l === 0) ctx.moveTo(xAt(l), yAt(points[l][rate.key]))
-          else ctx.lineTo(xAt(l), yAt(points[l][rate.key]))
+          if (l === 0) ctx.moveTo(xAt(points[l].t), yAt(points[l][key]))
+          else ctx.lineTo(xAt(points[l].t), yAt(points[l][key]))
         }
         ctx.strokeStyle = lineColor
         ctx.lineWidth = 1.5

@@ -547,6 +547,7 @@ Panel {
               && String(deviceEntry.modelData.id) === String(root.gateway.id)
               ? root.gateway.stats : null
             rateHistory: root.rateHistory
+            rateReport: root.gateway ? (root.gateway.history || null) : null
           }
         }
 

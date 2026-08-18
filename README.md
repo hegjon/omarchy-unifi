@@ -5,8 +5,8 @@ gateway on a site with its online state, model, address and how many clients
 hang off it, plus wired/wireless client totals. The bar icon carries a badge
 with the number of offline devices, and a notification fires when a device
 drops or comes back. Under the gateway it shows what is flowing through the
-WAN — download and upload right now, each with a graph since the shell
-started — plus CPU, memory, load and uptime. It is read-only.
+WAN — download and upload right now, each with a graph of the last twelve
+hours — plus CPU, memory, load and uptime. It is read-only.
 
 ![The panel listing a gateway with its WAN rates, two graphs and health line,
 then two access points and two switches with their state, address and client
@@ -62,7 +62,12 @@ The controller URL is normally the console root: the plugin appends
 else, give the full URL ending in `/integration/v1` and it is used as given.
 
 The API this plugin uses is documented by the controller itself at
-`https://<console>/unifi-api/network`.
+`https://<console>/unifi-api/network`. The one exception is the twelve-hour
+traffic graph: the documented API only reports the current rates, so the
+graph reads the five-minute WAN buckets from the classic report endpoint
+(`…/api/s/<site>/stat/report/5minutes.gw`) that the UniFi UI's own charts
+use. It is undocumented; if it ever stops answering, the graph falls back to
+the samples the widget collects itself while the shell runs.
 
 ## Settings
 

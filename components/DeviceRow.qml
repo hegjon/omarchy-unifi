@@ -19,6 +19,7 @@ Column {
   // Set only on the gateway row; null everywhere else.
   property var gatewayStats: null
   property var rateHistory: []
+  property var rateReport: null
 
   spacing: Style.space(6)
 
@@ -98,6 +99,7 @@ Column {
     host: row.host
     latest: row.gatewayStats
     history: row.rateHistory
+    report: row.rateReport
   }
 
   // The gateway block is a section of its own; a rule keeps the device list
