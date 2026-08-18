@@ -18,6 +18,16 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   at it with `XDG_STATE_HOME` set to a scratch dir, and store a throwaway key.
   Clear the key afterwards: `secret-tool clear application hegjon.unifi type api-key`.
 
+## API reference
+
+- The controller documents its own Integration API at
+  `https://<console>/unifi-api/network` (here: https://192.168.95.1/unifi-api/network).
+  It is a UniFi OS web app; the JSON it renders, like every
+  `/proxy/network/integration/v1/…` endpoint, needs the API key
+  (`X-API-KEY`), so read it in a browser signed in to the console. Prefer it
+  over memory when a field name or `state` value is in doubt; `normalize.jq`
+  and `test/fixtures/network.json` must agree with it.
+
 ## Things to keep
 
 - The API key never reaches argv: it goes to curl as a header line in a

@@ -55,6 +55,9 @@ The controller URL is normally the console root: the plugin appends
 `/proxy/network/integration/v1`. If your deployment serves the API somewhere
 else, give the full URL ending in `/integration/v1` and it is used as given.
 
+The API this plugin uses is documented by the controller itself at
+`https://<console>/unifi-api/network`.
+
 ## Settings
 
 Under the widget's settings in the bar:
