@@ -23,7 +23,7 @@ Panel {
 
   property var devices: []
   property var site: ({ id: "", name: "" })
-  property var summary: ({ devices: 0, online: 0, offline: 0, busy: 0, updatable: 0, clients: 0, wired: 0, wireless: 0 })
+  property var summary: ({ devices: 0, online: 0, offline: 0, busy: 0, updatable: 0, clients: 0, wired: 0, wireless: 0, vpn: 0 })
   property string lastError: ""
   property bool needsLogin: false
   property bool initialized: false
@@ -93,6 +93,7 @@ Panel {
       case "UPDATING": return "Updating"
       case "ISOLATED": return "Isolated"
       case "DELETING": return "Removing"
+      case "U5G_INCORRECT_TOPOLOGY": return "Incorrect topology"
       default:
         return state ? state.charAt(0) + state.slice(1).toLowerCase().replace(/_/g, " ") : "Unknown"
     }
@@ -491,6 +492,7 @@ Panel {
           text: root.summary.clients + " clients"
             + "  ·  " + root.summary.wireless + " wireless"
             + "  ·  " + root.summary.wired + " wired"
+            + (root.summary.vpn > 0 ? "  ·  " + root.summary.vpn + " VPN" : "")
           color: root.detailColor
           font.family: Style.font.family
           font.pixelSize: Style.font.caption

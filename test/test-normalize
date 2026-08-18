@@ -43,6 +43,16 @@ check "counts devices with a firmware update" network.json '.summary.updatable =
 
 check "counts all clients, whatever their type" network.json '.summary.clients == 5'
 check "splits wired and wireless clients" network.json '.summary.wired == 2 and .summary.wireless == 2'
+check "counts VPN clients separately" network.json '.summary.vpn == 1'
+# A device the API flags as a gateway is one, whatever its model says.
+if jq -f "$NORMALIZE" <<<'{"devices":[{"id":"g","name":"Box","model":"Custom","state":"ONLINE","features":["gateway","switching"]}]}' |
+   jq -e '.devices[0].kind == "gateway"' >/dev/null 2>&1; then
+  printf '  ok    the gateway feature marks a gateway\n'
+  (( passed++ ))
+else
+  printf '  FAIL  the gateway feature marks a gateway\n'
+  (( failed++ ))
+fi
 check "attributes clients to their uplink device" network.json \
   '(first(.devices[] | select(.name == "Living Room AP")) | .clients == 2)'
 check "a device with no clients reads zero, not null" network.json \

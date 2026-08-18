@@ -27,14 +27,20 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   (`X-API-KEY`), so read it in a browser signed in to the console. Prefer it
   over memory when a field name or `state` value is in doubt; `normalize.jq`
   and `test/fixtures/network.json` must agree with it. The OpenAPI document
-  behind that page is not served on the API-key path (every guess under
-  `/proxy/network/integration/…` is 404), so it has to be read in a browser.
+  behind that page is `/proxy/network/api-docs/integration.json` (found via
+  `/api/apps` → `integrationApis[].apiDocsLocation`). It is served to a
+  UniFi OS browser session, not to the API key: copy the request from the
+  browser's dev tools as curl (cookies `TOKEN` and `JSESSIONID`) and pipe it
+  to a file. Do not commit it or the cookies.
 - Checked live against Network 10.5.67 (UCG Fiber) on 2026-08-18: device
   keys are `features, firmwareUpdatable, firmwareVersion, id, interfaces,
   ipAddress, macAddress, model, name, state, supported`; client keys are
   `access, connectedAt, id, ipAddress, macAddress, name, type,
   uplinkDeviceId`; `features` seen: `accessPoint`, `switching` (the gateway
-  reports only `switching`, hence the model-name test); `/info` returns
+  reports only `switching`, hence the model-name test); the spec's enums are
+  features `switching|accessPoint|gateway`, interfaces `ports|radios`,
+  client `type` `WIRED|WIRELESS|VPN|TELEPORT` (only the first two carry
+  `uplinkDeviceId`); `/info` returns
   `{"applicationVersion": …}`. A gateway's `ipAddress` is its WAN address.
 
 ## Things to keep

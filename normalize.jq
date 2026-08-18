@@ -6,7 +6,10 @@
 
 def as_number($v): if ($v | type) == "number" then $v else null end;
 
-# The API's device.state values, folded to what the panel distinguishes.
+# The API's device.state values (the enum in the controller's OpenAPI document:
+# ONLINE, OFFLINE, PENDING_ADOPTION, UPDATING, GETTING_READY, ADOPTING,
+# DELETING, CONNECTION_INTERRUPTED, ISOLATED, U5G_INCORRECT_TOPOLOGY), folded
+# to what the panel distinguishes.
 # CONNECTION_INTERRUPTED is a device the controller can no longer hear from,
 # so it is treated as offline for the badge and notifications.
 def bucket:
@@ -16,9 +19,10 @@ def bucket:
     elif $s == "UPDATING" or $s == "GETTING_READY" or $s == "ADOPTING" or $s == "PENDING_ADOPTION" then "busy"
     else "other" end;
 
-# Which role a device plays. A gateway also switches, so the feature list alone
-# cannot single it out; the model name is the reliable tell for Ubiquiti's
-# gateway lines (Dream Machine, Cloud Gateway, Security Gateway, Express, …).
+# Which role a device plays. The API's features enum is switching, accessPoint
+# and gateway, but a UCG Fiber on Network 10.5 reports only "switching", so
+# the model name is the fallback tell for Ubiquiti's gateway lines (Dream
+# Machine, Cloud Gateway, Security Gateway, Express, …).
 def is_gateway:
   ((.features // []) | index("gateway")) != null
   or ((.model // "") | test("^(UDM|UCG|UXG|USG|UDR|UDW|UX|EFG)([- ]|$)|Dream|Gateway|Fortress|Express"; "i"));
@@ -73,6 +77,9 @@ def display_name: (.name // .model // .macAddress // "Device") | tostring;
       updatable: ($devices | map(select(.firmwareUpdatable)) | length),
       clients: ($clients | length),
       wired: ($clients | map(select(.type == "WIRED")) | length),
-      wireless: ($clients | map(select(.type == "WIRELESS")) | length)
+      wireless: ($clients | map(select(.type == "WIRELESS")) | length),
+      # Teleport is Ubiquiti's own VPN, so it counts with VPN rather than as
+      # a fourth kind nobody would look for.
+      vpn: ($clients | map(select(.type == "VPN" or .type == "TELEPORT")) | length)
     }
   }
