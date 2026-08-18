@@ -59,13 +59,14 @@ Column {
   }
 
   // Download keeps the accent; upload takes the accent's complementary hue so
-  // the two graphs are told apart at a glance in any theme. A theme whose
-  // accent is grey has no hue to rotate, so it falls back to the urgent
-  // colour — the only other guaranteed-distinct token.
+  // the two graphs are told apart at a glance. A theme whose accent is grey
+  // has no hue to rotate, so upload keeps the default accent there — the two
+  // graphs are still separate boxes with their own headers, and borrowing
+  // the urgent colour would read as an alarm.
   readonly property color downColor: Color.accent
   readonly property color upColor: {
     var a = Color.accent
-    if (a.hslSaturation < 0.2) return Color.urgent
+    if (a.hslSaturation < 0.2) return a
     return Qt.hsla((a.hslHue + 0.5) % 1, a.hslSaturation, a.hslLightness, 1)
   }
 
