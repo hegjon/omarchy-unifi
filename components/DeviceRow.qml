@@ -99,4 +99,12 @@ Column {
     latest: row.gatewayStats
     history: row.rateHistory
   }
+
+  // The gateway block is a section of its own; a rule keeps the device list
+  // below it from reading as part of the graph's caption.
+  PanelSeparator {
+    visible: row.gatewayStats !== null
+    width: parent.width
+    foreground: Color.popups.text
+  }
 }
