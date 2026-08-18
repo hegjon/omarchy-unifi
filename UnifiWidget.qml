@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
@@ -32,6 +33,11 @@ Panel {
   property var rateHistory: []
   property string lastHeartbeatAt: ""
   readonly property int rateHistoryCap: 120
+
+  // The panel's height ceiling. The device list takes whatever of it the
+  // gateway block, headers and footer leave over, so the panel never grows
+  // past this and the gateway is never pushed out of view.
+  readonly property real panelMaxHeight: Style.space(760)
   property var summary: ({ devices: 0, online: 0, offline: 0, busy: 0, updatable: 0, clients: 0, wired: 0, wireless: 0, vpn: 0 })
   property string lastError: ""
   property bool needsLogin: false
@@ -344,6 +350,12 @@ Panel {
     onTriggered: root.nowMs = Date.now()
   }
 
+  // The gateway (with its statistics block) stays put at the top; every
+  // other device scrolls in a list below it, so a large fleet cannot push
+  // the panel off the screen or the gateway out of view.
+  readonly property var gatewayDevices: devices.filter(function(d) { return d.kind === "gateway" })
+  readonly property var otherDevices: devices.filter(function(d) { return d.kind !== "gateway" })
+
   // A newly opened panel should not show data from twenty minutes ago.
   onOpenedChanged: if (opened) refresh()
 
@@ -436,13 +448,20 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: networkPanel.fittedContentWidth(Style.space(400))
-    contentHeight: networkPanel.fittedContentHeight(column.implicitHeight, Style.space(620))
+    contentHeight: networkPanel.fittedContentHeight(column.implicitHeight, root.panelMaxHeight)
 
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
+      // j/k and the arrow keys scroll the device list, one row at a time.
+      onMoveRequested: function(dx, dy) {
+        if (dy === 0 || !deviceList.interactive) return
+        var step = deviceList.rowHeight * dy
+        deviceList.contentY = Math.max(0, Math.min(deviceList.contentHeight - deviceList.height,
+                                                    deviceList.contentY + step))
+      }
 
       // One action per press: a held key would otherwise refetch every repeat.
       property string heldKey: ""
@@ -458,6 +477,21 @@ Panel {
         id: column
         width: parent.width
         spacing: Style.space(10)
+
+        // Height of everything in this column except the device list, so the
+        // list can be sized to the space that remains. Reading each child's
+        // height here binds to it, so this follows the gateway block as it
+        // grows and shrinks. The list is skipped, which is what keeps this
+        // from being a binding loop.
+        readonly property real fixedHeight: {
+          var total = 0
+          for (var i = 0; i < children.length; i++) {
+            var child = children[i]
+            if (child === deviceList || !child.visible) continue
+            total += child.height + spacing
+          }
+          return total
+        }
 
         PanelSectionHeader {
           width: parent.width
@@ -548,22 +582,58 @@ Panel {
         }
 
         Repeater {
-          model: root.devices
+          model: root.gatewayDevices
 
           DeviceRow {
-            id: deviceEntry
+            id: gatewayEntry
 
             required property var modelData
 
             width: column.width
-            device: deviceEntry.modelData
+            device: gatewayEntry.modelData
             host: root
             gatewayStats: root.showGatewayStats && root.gateway && root.gateway.stats
-              && String(deviceEntry.modelData.id) === String(root.gateway.id)
+              && String(gatewayEntry.modelData.id) === String(root.gateway.id)
               ? root.gateway.stats : null
             rateHistory: root.rateHistory
             rateReport: root.gateway ? (root.gateway.history || null) : null
             wanState: root.gateway ? (root.gateway.wan || null) : null
+          }
+        }
+
+        // ListView rather than Repeater so a long fleet scrolls inside a
+        // fixed box instead of growing the panel. Same idiom as the network
+        // panel's station list.
+        ListView {
+          id: deviceList
+          width: parent.width
+          // Whatever the panel ceiling leaves after the fixed content, but
+          // never less than about two rows so the list stays usable.
+          height: Math.min(contentHeight, Math.max(Style.space(96),
+            Math.min(root.panelMaxHeight, networkPanel.availableCardHeight)
+              - networkPanel.verticalContentInset - column.fixedHeight))
+          spacing: Style.space(10)
+          clip: true
+          boundsBehavior: Flickable.StopAtBounds
+          interactive: contentHeight > height
+          visible: count > 0
+
+          // One row plus spacing, for keyboard stepping.
+          readonly property real rowHeight: (contentItem.children.length > 0
+            ? contentItem.children[0].height : Style.space(40)) + spacing
+
+          ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+          model: root.otherDevices
+
+          delegate: DeviceRow {
+            id: deviceEntry
+
+            required property var modelData
+
+            width: ListView.view.width - Style.space(6)   // room for the scrollbar
+            device: deviceEntry.modelData
+            host: root
           }
         }
 
