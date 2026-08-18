@@ -23,6 +23,15 @@ Panel {
 
   property var devices: []
   property var site: ({ id: "", name: "" })
+  property var gateway: null
+
+  // WAN rate samples for the graph, oldest first: {t, rx, tx}. One entry per
+  // controller heartbeat, so consecutive polls that see the same heartbeat
+  // add nothing — the rates would just be repeated. Capped so a shell that
+  // has been up for a week does not drag a week of points into every paint.
+  property var rateHistory: []
+  property string lastHeartbeatAt: ""
+  readonly property int rateHistoryCap: 120
   property var summary: ({ devices: 0, online: 0, offline: 0, busy: 0, updatable: 0, clients: 0, wired: 0, wireless: 0, vpn: 0 })
   property string lastError: ""
   property bool needsLogin: false
@@ -53,6 +62,7 @@ Panel {
   }
 
   readonly property bool showBarClients: boolSetting("showBarClients", false)
+  readonly property bool showGatewayStats: boolSetting("showGatewayStats", true)
   readonly property int refreshIntervalMs: intSetting("refreshIntervalSec", 30, 10, 300) * 1000
   readonly property bool watchEnabled: boolSetting("watch", true)
   readonly property int watchIntervalMs: intSetting("watchIntervalSec", 120, 30, 3600) * 1000
@@ -214,9 +224,24 @@ Panel {
     devices = (parsed && parsed.devices) ? parsed.devices : []
     if (parsed && parsed.site) site = parsed.site
     if (parsed && parsed.summary) summary = parsed.summary
+    gateway = (parsed && parsed.gateway) ? parsed.gateway : null
     lastUpdatedAt = Date.now()
+    recordRates()
 
     evaluateNotifications()
+  }
+
+  function recordRates() {
+    if (!gateway || !gateway.stats) return
+    var st = gateway.stats
+    if (st.rxBps === null || st.txBps === null) return
+    var stamp = String(st.heartbeatAt || "")
+    if (stamp !== "" && stamp === lastHeartbeatAt) return
+    lastHeartbeatAt = stamp
+    var next = rateHistory.slice()
+    next.push({ t: Date.now(), rx: st.rxBps, tx: st.txBps })
+    if (next.length > rateHistoryCap) next.splice(0, next.length - rateHistoryCap)
+    rateHistory = next
   }
 
   // --- notifications ----------------------------------------------------
@@ -518,6 +543,10 @@ Panel {
             width: column.width
             device: deviceEntry.modelData
             host: root
+            gatewayStats: root.showGatewayStats && root.gateway && root.gateway.stats
+              && String(deviceEntry.modelData.id) === String(root.gateway.id)
+              ? root.gateway.stats : null
+            rateHistory: root.rateHistory
           }
         }
 

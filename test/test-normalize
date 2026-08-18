@@ -92,6 +92,42 @@ check "keeps the raw state alongside the bucket" network.json \
   '(.devices | map(select(.mac == "aa:bb:cc:00:00:05")) | .[0].state == "CONNECTION_INTERRUPTED" and .[0].bucket == "offline")'
 
 echo
+echo "gateway statistics"
+check "names the gateway even without statistics" network.json \
+  '.gateway.id == "d4" and .gateway.name == "Gateway" and .gateway.stats == null'
+# Statistics come from a second request, so the test glues the captured
+# response onto the fixture the way unifi-fetch does.
+with_stats=$(jq --slurpfile st "$TEST_DIR/fixtures/gateway-stats.json" '. + {stats: $st[0]}' \
+  "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" 2>&1)
+if jq -e '.gateway.stats.rxBps == 23760 and .gateway.stats.txBps == 14696' >/dev/null 2>&1 <<<"$with_stats"; then
+  printf '  ok    reads WAN rates from the uplink block\n'; (( passed++ ))
+else
+  printf '  FAIL  reads WAN rates from the uplink block\n'; (( failed++ ))
+fi
+if jq -e '.gateway.stats.cpuPct == 6.2 and .gateway.stats.memPct == 59.1 and .gateway.stats.uptimeSec == 441749 and .gateway.stats.load1 == 1.14' >/dev/null 2>&1 <<<"$with_stats"; then
+  printf '  ok    reads load, memory, CPU and uptime\n'; (( passed++ ))
+else
+  printf '  FAIL  reads load, memory, CPU and uptime\n'; (( failed++ ))
+fi
+if jq -e '.gateway.stats.heartbeatAt == "2026-08-18T17:55:57Z"' >/dev/null 2>&1 <<<"$with_stats"; then
+  printf '  ok    keeps the heartbeat stamp the widget dedups samples on\n'; (( passed++ ))
+else
+  printf '  FAIL  keeps the heartbeat stamp the widget dedups samples on\n'; (( failed++ ))
+fi
+if jq -f "$NORMALIZE" <<<'{"devices":[{"id":"a","name":"AP","state":"ONLINE","features":["accessPoint"]}],"stats":{"uptimeSec":1}}' |
+   jq -e '.gateway == null' >/dev/null 2>&1; then
+  printf '  ok    no gateway means no gateway block, statistics or not\n'; (( passed++ ))
+else
+  printf '  FAIL  no gateway means no gateway block, statistics or not\n'; (( failed++ ))
+fi
+if jq -f "$NORMALIZE" <<<'{"devices":[{"id":"g","model":"UDM-Pro","state":"ONLINE"}],"stats":{}}' |
+   jq -e '.gateway.stats.rxBps == null and .gateway.stats.uptimeSec == null' >/dev/null 2>&1; then
+  printf '  ok    an empty statistics object normalizes to nulls\n'; (( passed++ ))
+else
+  printf '  FAIL  an empty statistics object normalizes to nulls\n'; (( failed++ ))
+fi
+
+echo
 echo "degenerate input"
 for payload in '{}' '{"devices":[]}' '{"devices":[{}],"clients":[{}]}'; do
   if out=$(jq -f "$NORMALIZE" <<<"$payload" 2>&1); then

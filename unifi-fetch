@@ -84,8 +84,23 @@ devices="$FETCHED"
 fetch_all "/sites/$site_id/clients"
 clients="$FETCHED"
 
+raw=$(jq -n --argjson site "$site" --argjson devices "$devices" --argjson clients "$clients" \
+  '{site: $site, devices: $devices, clients: $clients}')
+
+# The gateway's own statistics (WAN rates, load, uptime) are one more request,
+# for one device only, and are worth it: they are what the panel graphs. The
+# normalizer decides which device is the gateway, so ask it first. A failure
+# here is not fatal — the fleet still renders, just without the graph.
+stats=null
+gateway_id=$(jq -r -f "$NORMALIZE" <<<"$raw" 2>/dev/null | jq -r '.gateway.id // empty' 2>/dev/null)
+if [[ -n $gateway_id ]]; then
+  unifi_http "/sites/$site_id/devices/$gateway_id/statistics/latest" "$API_KEY"
+  if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e 'type == "object"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
+    stats="$UNIFI_HTTP_BODY"
+  fi
+fi
+
 unset API_KEY
 
-jq -n --argjson site "$site" --argjson devices "$devices" --argjson clients "$clients" \
-  '{site: $site, devices: $devices, clients: $clients}' |
+jq --argjson stats "$stats" '. + {stats: $stats}' <<<"$raw" |
   jq -f "$NORMALIZE" 2>/dev/null || die "Could not interpret the controller response"

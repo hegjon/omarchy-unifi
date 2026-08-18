@@ -28,6 +28,7 @@
     "defaultSection": "right",
     "defaults": {
       "showBarClients": false,
+      "showGatewayStats": true,
       "refreshIntervalSec": 30,
       "watch": true,
       "watchIntervalSec": 120,
@@ -41,6 +42,12 @@
         "type": "boolean",
         "label": "Show the connected client count on the bar icon",
         "defaultValue": false
+      },
+      {
+        "key": "showGatewayStats",
+        "type": "boolean",
+        "label": "Show the gateway's WAN graph, CPU, memory and uptime",
+        "defaultValue": true
       },
       {
         "key": "refreshIntervalSec",

@@ -45,7 +45,26 @@ def sort_key:
 
 def display_name: (.name // .model // .macAddress // "Device") | tostring;
 
+# The gateway's latest statistics, when the caller fetched them: rates on its
+# uplink (the WAN), load and uptime. Bits per second are kept as the API gives
+# them; the panel chooses the unit.
+def gateway_stats:
+  if (.stats // null) == null then null else
+    {
+      uptimeSec: as_number(.stats.uptimeSec),
+      heartbeatAt: (.stats.lastHeartbeatAt // null),
+      cpuPct: as_number(.stats.cpuUtilizationPct),
+      memPct: as_number(.stats.memoryUtilizationPct),
+      load1: as_number(.stats.loadAverage1Min),
+      load5: as_number(.stats.loadAverage5Min),
+      load15: as_number(.stats.loadAverage15Min),
+      rxBps: as_number(.stats.uplink?.rxRateBps),
+      txBps: as_number(.stats.uplink?.txRateBps)
+    }
+  end;
+
 (.site // {}) as $site
+| gateway_stats as $stats
 | (.clients // []) as $clients
 | ($clients | map(select(.uplinkDeviceId != null)) | group_by(.uplinkDeviceId)
    | map({key: .[0].uplinkDeviceId, value: length}) | from_entries) as $clients_by_device
@@ -66,9 +85,13 @@ def display_name: (.name // .model // .macAddress // "Device") | tostring;
         firmwareUpdatable: (.firmwareUpdatable // false)
       }
   ) | sort_by(sort_key)) as $devices
+| ($devices | map(select(.kind == "gateway")) | .[0] // null) as $gateway
 | {
     site: {id: ($site.id // ""), name: ($site.name // $site.internalReference // "")},
     devices: $devices,
+    # The first gateway is the one whose statistics are fetched and graphed.
+    gateway: (if $gateway == null then null
+              else {id: $gateway.id, name: $gateway.name, stats: $stats} end),
     summary: {
       devices: ($devices | length),
       online: ($devices | map(select(.bucket == "online")) | length),

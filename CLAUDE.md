@@ -43,6 +43,14 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   `uplinkDeviceId`); `/info` returns
   `{"applicationVersion": …}`. A gateway's `ipAddress` is its WAN address.
 
+## Testing the graph
+
+- The graph needs samples, one per controller heartbeat (~24 s). To see it
+  quickly, point `backendPath` at a stub that prints the fixture with a
+  synthetic `stats` block and a fresh `lastHeartbeatAt` each call, then
+  `omarchy-shell hegjon.unifi refresh` in a loop. Swap the file back from a
+  copy — **not** `git checkout`, which discards every uncommitted edit in it.
+
 ## Things to keep
 
 - The API key never reaches argv: it goes to curl as a header line in a

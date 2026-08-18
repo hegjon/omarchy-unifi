@@ -4,11 +4,13 @@ Watch your UniFi network from the Omarchy bar: every access point, switch and
 gateway on a site with its online state, model, address and how many clients
 hang off it, plus wired/wireless client totals. The bar icon carries a badge
 with the number of offline devices, and a notification fires when a device
-drops or comes back. It is read-only.
+drops or comes back. Under the gateway it shows what is flowing through the
+WAN — download and upload right now and a graph of both since the shell
+started — plus CPU, memory, load and uptime. It is read-only.
 
-![The panel listing a gateway, two access points and two switches with their
-state, address and client counts; one access point offline and one switch
-unreachable](preview.png)
+![The panel listing a gateway with its WAN rates, a graph and health line,
+then two access points and two switches with their state, address and client
+counts; one access point offline and one switch unreachable](preview.png)
 
 It talks to the UniFi Network application's official **Integration API**
 (Network 9.0 or newer) with an API key, so it works with UniFi OS consoles
@@ -67,6 +69,7 @@ The API this plugin uses is documented by the controller itself at
 Under the widget's settings in the bar:
 
 - Show the connected client count on the bar icon
+- Show the gateway's WAN graph, CPU, memory and uptime
 - Refresh interval while the panel is open, and the background poll interval
 - Notify when a device goes offline / comes back online, with a per-device
   cooldown
