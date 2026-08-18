@@ -244,6 +244,9 @@ Column {
       spacing: Style.space(8)
 
       readonly property bool up: linkRow.modelData.up === true
+      // A port that has never been up since the gateway booted is unused,
+      // not broken, so it reads as a fact rather than an alarm.
+      readonly property bool unused: linkRow.modelData.state === "unused"
 
       Text {
         id: linkDetail
@@ -257,6 +260,8 @@ Column {
             if (l.uptimeSec) parts.push("up " + stats.formatUptime(l.uptimeSec))
             if (l.availabilityPct !== null && l.availabilityPct !== undefined)
               parts.push((Math.round(l.availabilityPct * 10) / 10) + "% last 24 h")
+          } else if (linkRow.unused) {
+            // Nothing to add: the state column says it all.
           } else if (l.downtimeSec) {
             parts.push("down for " + stats.formatUptime(l.downtimeSec))
           }
@@ -269,8 +274,8 @@ Column {
 
       Text {
         id: linkState
-        text: linkRow.up ? "Online" : "Down"
-        color: linkRow.up ? Color.popups.text : Color.urgent
+        text: linkRow.up ? "Online" : (linkRow.unused ? "Not connected" : "Down")
+        color: linkRow.up ? Color.popups.text : (linkRow.unused ? stats.host.detailColor : Color.urgent)
         font.family: Style.font.family
         font.pixelSize: Style.font.caption
       }

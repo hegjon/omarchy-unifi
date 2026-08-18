@@ -91,6 +91,9 @@ def wan_state:
     | if $wan == null then null else
       ((.wans // []) | map(.name // "")) as $names
       | (($wan.uptime_stats // {}) | to_entries | sort_by(.key)) as $links
+      # The gateway's own uptime, to tell an unused port from a failed link:
+      # a link whose downtime is as old as the gateway has never been up.
+      | (($wan["gw_system-stats"].uptime // null) | if type == "string" then (tonumber? // null) else . end) as $gw_uptime
       | {
           status: ($wan.status // "unknown"),
           ip: ($wan.wan_ip // null),
@@ -101,10 +104,20 @@ def wan_state:
           uptimeSec: as_number($www.uptime),
           links: ($links | to_entries | map(
             .key as $i | .value.key as $key | .value.value as $u
+            | (($u.uptime // 0) > 0 and (($u.downtime // 0) == 0 or ($u.availability // 0) > 0)) as $up
+            # Never up: no uptime, and either no downtime figure at all or one
+            # that reaches back to (within ten minutes of) the gateway's boot.
+            # A second WAN port with nothing plugged in looks exactly like
+            # this, and it is not a fault.
+            | ((($u.uptime // 0) == 0)
+               and (($u.availability // 0) == 0)
+               and (($u.downtime // null) == null
+                    or ($gw_uptime != null and ($u.downtime // 0) >= $gw_uptime - 600))) as $never_up
             | {
                 key: $key,
                 name: (if ($names | length) == ($links | length) then ($names[$i] // $key) else $key end),
-                up: (($u.uptime // 0) > 0 and (($u.downtime // 0) == 0 or ($u.availability // 0) > 0)),
+                up: $up,
+                state: (if $up then "up" elif $never_up then "unused" else "down" end),
                 availabilityPct: as_number($u.availability),
                 latencyMs: as_number($u.latency_average),
                 uptimeSec: as_number($u.uptime),

@@ -1,6 +1,6 @@
 [
   {"subsystem":"wlan","num_user":9,"status":"ok"},
-  {"subsystem":"wan","num_gw":1,"status":"ok","wan_ip":"203.0.113.7","gateways":["203.0.113.1"],"netmask":"255.255.255.0","gw_mac":"aa:bb:cc:00:00:04","gw_name":"Gateway","isp_name":"Example ISP","isp_organization":"Example ISP Ltd","asn":64496,
+  {"subsystem":"wan","num_gw":1,"status":"ok","wan_ip":"203.0.113.7","gateways":["203.0.113.1"],"netmask":"255.255.255.0","gw_mac":"aa:bb:cc:00:00:04","gw_name":"Gateway","gw_system-stats":{"cpu":"5.4","mem":"58.8","uptime":"444426"},"isp_name":"Example ISP","isp_organization":"Example ISP Ltd","asn":64496,
    "uptime_stats":{
      "WAN":{"availability":99.5,"latency_average":8,"time_period":86400,"uptime":362833,"monitors":[]},
      "WAN2":{"availability":0.0,"downtime":444363,"monitors":[]}}},

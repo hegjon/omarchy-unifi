@@ -178,8 +178,28 @@ wan_check "names links from /wans when the counts agree" \
   '[.gateway.wan.links[].name] == ["Fibre", "LTE backup"]'
 wan_check "a link with uptime and availability is up" \
   '.gateway.wan.links[0].up == true and .gateway.wan.links[0].availabilityPct == 99.5 and .gateway.wan.links[0].latencyMs == 8'
-wan_check "a link with only downtime is down" \
-  '.gateway.wan.links[1].up == false and .gateway.wan.links[1].downtimeSec == 444363'
+wan_check "the up link is state up" '.gateway.wan.links[0].state == "up"'
+# The fixture's WAN2 downtime (444363 s) reaches back to the gateway's boot
+# (uptime 444426 s): nothing was ever plugged in.
+wan_check "a link down since the gateway booted is unused, not down" \
+  '.gateway.wan.links[1].up == false and .gateway.wan.links[1].state == "unused"'
+# A link that was up earlier today and has since dropped is a real outage.
+if jq --slurpfile h "$TEST_DIR/fixtures/health.json" \
+      '. + {health: ($h[0] | map(if .subsystem == "wan" then .uptime_stats.WAN2 = {availability: 40.0, downtime: 3600} else . end))}' \
+      "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" |
+   jq -e '.gateway.wan.links[1].state == "down"' >/dev/null 2>&1; then
+  printf '  ok    a link that dropped after being up is down\n'; (( passed++ ))
+else
+  printf '  FAIL  a link that dropped after being up is down\n'; (( failed++ ))
+fi
+if jq --slurpfile h "$TEST_DIR/fixtures/health.json" \
+      '. + {health: ($h[0] | map(if .subsystem == "wan" then .uptime_stats.WAN2 = {availability: 0.0, downtime: 3600} else . end))}' \
+      "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" |
+   jq -e '.gateway.wan.links[1].state == "down"' >/dev/null 2>&1; then
+  printf '  ok    a link down for an hour on a five-day-old gateway is down\n'; (( passed++ ))
+else
+  printf '  FAIL  a link down for an hour on a five-day-old gateway is down\n'; (( failed++ ))
+fi
 # Names by position are only trustworthy when there is one per link.
 if jq --slurpfile h "$TEST_DIR/fixtures/health.json" '. + {health: $h[0], wans: [{"name":"Only one"}]}' \
      "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" |

@@ -60,7 +60,10 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   downtime, time_period 86400) and the `www` row has `latency, uptime`. Link
   names come from the documented `/sites/{id}/wans`, matched by position
   only when the counts agree. Fetched every poll; small. Failure → `wan`
-  null → no WAN lines.
+  null → no WAN lines. A link is `unused` (shown muted as "Not connected")
+  when it has no uptime and its downtime reaches back to the gateway's boot
+  (`gw_system-stats.uptime`, ±10 min): an empty second WAN port looks like
+  that and is not a fault. A link that was up and dropped is `down`.
 
 ## Testing the graph
 
