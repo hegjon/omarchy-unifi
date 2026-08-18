@@ -63,7 +63,10 @@ Panel {
 
   readonly property bool showBarClients: boolSetting("showBarClients", false)
   readonly property bool showGatewayStats: boolSetting("showGatewayStats", true)
-  readonly property int refreshIntervalMs: intSetting("refreshIntervalSec", 30, 10, 300) * 1000
+  // Fast while the panel is open so the gateway's rates and load feel live:
+  // the controller heartbeats every ~20 s, so most polls repeat the last
+  // sample, but each is four small LAN requests (the report is cached).
+  readonly property int refreshIntervalMs: intSetting("refreshIntervalSec", 2, 1, 300) * 1000
   readonly property bool watchEnabled: boolSetting("watch", true)
   readonly property int watchIntervalMs: intSetting("watchIntervalSec", 120, 30, 3600) * 1000
   readonly property bool notifyOffline: boolSetting("notifyOffline", true)
