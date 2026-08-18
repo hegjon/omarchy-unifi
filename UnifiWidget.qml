@@ -354,7 +354,11 @@ Panel {
     Item {
       UbiquitiIcon {
         anchors.centerIn: parent
-        iconSize: Style.bar.iconCanvas
+        // The mark fills its 24-unit box edge to edge, while a font glyph
+        // at the bar's icon size leaves margins inside its em box: measured
+        // against the neighbouring icons, their ink is about 11 px to the
+        // canvas's 16. Scale to the icon font size, then a little under.
+        iconSize: Math.round(Style.bar.iconFont * 0.85)
         // Same rule as the text glyph: urgent while something is offline.
         color: button.active && button.useActiveColor ? button.activeColor : button.foreground
         Behavior on color { ColorAnimation { duration: 160 } }
