@@ -52,8 +52,30 @@ check "classifies access points" network.json \
   '(first(.devices[] | select(.name == "Living Room AP")) | .kind == "ap")'
 check "classifies switches" network.json \
   '(first(.devices[] | select(.name == "Office Switch")) | .kind == "switch")'
-check "access points sort before switches" network.json \
-  '([.devices[].kind] | index("ap") < index("switch"))'
+# A gateway also reports "switching", so it is told apart by model.
+check "classifies a Cloud Gateway as a gateway despite its switching feature" network.json \
+  '(first(.devices[] | select(.name == "Gateway")) | .kind == "gateway")'
+
+echo
+echo "ordering"
+check "the gateway comes first" network.json '.devices[0].name == "Gateway"'
+check "online devices precede offline ones" network.json \
+  '([.devices[].bucket] | index("offline") > (map(select(. == "online")) | length - 1))'
+check "no online device follows an offline one" network.json \
+  '([.devices[].bucket] | . as $b | [range(1; length)] | all(. as $i | ($b[$i-1] == "offline") | not or ($b[$i] == "offline")))'
+check "access points sort before switches within a group" network.json \
+  '([.devices[] | select(.bucket == "online" and .kind != "gateway") | .kind] == ["ap", "switch"])'
+check "offline devices keep the same role order" network.json \
+  '([.devices[] | select(.bucket == "offline") | .kind] == ["ap", "switch"])'
+# An offline gateway still leads: it is the most important thing to notice.
+if jq -f "$NORMALIZE" <<<'{"devices":[{"id":"a","name":"AP","state":"ONLINE","features":["accessPoint"]},{"id":"g","name":"UDM","model":"UDM-Pro","state":"OFFLINE","features":["switching"]}]}' |
+   jq -e '.devices[0].name == "UDM"' >/dev/null 2>&1; then
+  printf '  ok    an offline gateway still leads the list\n'
+  (( passed++ ))
+else
+  printf '  FAIL  an offline gateway still leads the list\n'
+  (( failed++ ))
+fi
 check "a nameless device falls back to its model" network.json \
   '(.devices | map(select(.mac == "aa:bb:cc:00:00:05")) | .[0].name == "USW-Flex-Mini")'
 check "keeps the raw state alongside the bucket" network.json \

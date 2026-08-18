@@ -16,13 +16,28 @@ def bucket:
     elif $s == "UPDATING" or $s == "GETTING_READY" or $s == "ADOPTING" or $s == "PENDING_ADOPTION" then "busy"
     else "other" end;
 
-# Access points, switches and gateways sort in that order, then by name, so a
-# panel with a dozen devices reads by role.
-def kind_rank:
-  (.features // []) as $f
-  | if ($f | index("accessPoint")) != null then 0
-    elif ($f | index("switching")) != null then 1
-    else 2 end;
+# Which role a device plays. A gateway also switches, so the feature list alone
+# cannot single it out; the model name is the reliable tell for Ubiquiti's
+# gateway lines (Dream Machine, Cloud Gateway, Security Gateway, Express, …).
+def is_gateway:
+  ((.features // []) | index("gateway")) != null
+  or ((.model // "") | test("^(UDM|UCG|UXG|USG|UDR|UDW|UX|EFG)([- ]|$)|Dream|Gateway|Fortress|Express"; "i"));
+
+def kind:
+  if is_gateway then "gateway"
+  elif ((.features // []) | index("accessPoint")) != null then "ap"
+  elif ((.features // []) | index("switching")) != null then "switch"
+  else "other" end;
+
+# The gateway leads the list because it is what everything else hangs off,
+# then everything reachable, with offline devices last where they do not push
+# the working network out of view. Within a group: access points, switches,
+# then by name.
+def sort_key:
+  [ (if .kind == "gateway" then 0 else 1 end),
+    (if .bucket == "online" then 0 elif .bucket == "busy" then 1 else 2 end),
+    (if .kind == "ap" then 0 elif .kind == "switch" then 1 else 2 end),
+    .name ];
 
 def display_name: (.name // .model // .macAddress // "Device") | tostring;
 
@@ -42,11 +57,11 @@ def display_name: (.name // .model // .macAddress // "Device") | tostring;
         bucket: ($state | bucket),
         online: (($state | bucket) == "online"),
         features: (.features // []),
-        kind: (if kind_rank == 0 then "ap" elif kind_rank == 1 then "switch" else "gateway" end),
+        kind: kind,
         clients: ($clients_by_device[.id // ""] // 0),
         firmwareUpdatable: (.firmwareUpdatable // false)
       }
-  ) | sort_by(.kind, .name)) as $devices
+  ) | sort_by(sort_key)) as $devices
 | {
     site: {id: ($site.id // ""), name: ($site.name // $site.internalReference // "")},
     devices: $devices,
