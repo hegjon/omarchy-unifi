@@ -43,8 +43,8 @@ stock Omarchy system.
    `~/.config/omarchy/plugins/hegjon.unifi/unifi-login` in a terminal.
 3. Enter the controller address (your default gateway is offered, which on a
    UniFi network is usually the console), say whether to accept its
-   self-signed certificate, and paste the key. If the controller has more than
-   one site you then pick one from a list.
+   self-signed certificate (the default is to allow it), and paste the key.
+   If the controller has more than one site you then pick one from a list.
 
 The address and site are kept in `~/.local/state/omarchy/unifi/config`; the
 key goes into the keyring under the plugin id and is never written anywhere

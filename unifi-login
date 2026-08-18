@@ -62,7 +62,8 @@ echo "Create an API key in the UniFi Network application:"
 echo "  Settings → Control Plane → Integrations → Create API Key"
 echo
 
-unifi_load_config || true
+configured=0
+unifi_load_config && configured=1
 
 # On a UniFi network the gateway usually is the console, so offer it as the
 # default; 192.168.1.1 is only the fallback when no default route exists.
@@ -73,8 +74,15 @@ url="${url:-$default_url}"
 [[ $url == http://* || $url == https://* ]] || url="https://$url"
 url="${url%/}"
 
-default_insecure=$([[ ${UNIFI_INSECURE:-0} == 1 ]] && echo Y || echo N)
-read -r -p "Allow a self-signed certificate (most consoles have one)? [y/N, current $default_insecure]: " answer
+# Consoles ship with a self-signed certificate, so allowing it is the default
+# on first setup; a re-run keeps whatever was chosen before.
+if (( configured )); then
+  default_insecure=$([[ $UNIFI_INSECURE == 1 ]] && echo Y || echo N)
+else
+  default_insecure=Y
+fi
+yn=$([[ $default_insecure == Y ]] && echo "Y/n" || echo "y/N")
+read -r -p "Allow a self-signed certificate (most consoles have one)? [$yn]: " answer
 answer="${answer:-$default_insecure}"
 insecure=$([[ $answer =~ ^[Yy] ]] && echo 1 || echo 0)
 
