@@ -11,7 +11,7 @@ upstream gateway, ISP, and each WAN link's latency, uptime and 24-hour
 availability, so a failed-over or dead backup link is visible. It is
 read-only.
 
-![The panel listing a gateway with its WAN rates, two graphs and health line,
+![The panel listing a gateway with its WAN rates, two 12-hour graphs, health line and WAN links,
 then two access points and two switches with their state, address and client
 counts; one access point offline and one switch unreachable](preview.png)
 
