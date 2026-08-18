@@ -6,8 +6,9 @@ hang off it, plus wired/wireless client totals. The bar icon carries a badge
 with the number of offline devices, and a notification fires when a device
 drops or comes back. It is read-only.
 
-![The panel listing a gateway, two switches and five access points with their
-state, address and client counts, three of them offline](preview.png)
+![The panel listing a gateway, two access points and two switches with their
+state, address and client counts; one access point offline and one switch
+unreachable](preview.png)
 
 It talks to the UniFi Network application's official **Integration API**
 (Network 9.0 or newer) with an API key, so it works with UniFi OS consoles
