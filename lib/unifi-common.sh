@@ -14,7 +14,8 @@ readonly UNIFI_PLUGIN_ID="hegjon.unifi"
 readonly UNIFI_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/unifi"
 readonly UNIFI_CONFIG_FILE="$UNIFI_STATE_DIR/config"
 
-# Set by unifi_load_config.
+# Set by unifi_load_config and read by the scripts that source this file.
+# shellcheck disable=SC2034
 UNIFI_URL=""
 UNIFI_SITE=""
 UNIFI_INSECURE=0
@@ -55,6 +56,7 @@ unifi_load_config() {
   while IFS='=' read -r key value; do
     case "$key" in
       url) UNIFI_URL="$value" ;;
+      # shellcheck disable=SC2034  # read by unifi-fetch and unifi-login
       site) UNIFI_SITE="$value" ;;
       insecure) UNIFI_INSECURE="$value" ;;
     esac
