@@ -78,9 +78,6 @@ read -r -p "Allow a self-signed certificate (most consoles have one)? [y/N, curr
 answer="${answer:-$default_insecure}"
 insecure=$([[ $answer =~ ^[Yy] ]] && echo 1 || echo 0)
 
-read -r -e -p "Site name or id [${UNIFI_SITE:-first site}]: " site
-site="${site:-$UNIFI_SITE}"
-
 existing_key="$(unifi_api_key)"
 if [[ -n $existing_key ]]; then
   read -r -s -p "API key (leave empty to keep the stored one): " key
@@ -94,31 +91,54 @@ unset existing_key
 
 # Try the key before storing anything, so a typo does not replace a working
 # configuration.
-UNIFI_URL="$url"; UNIFI_INSECURE="$insecure"; UNIFI_SITE="$site"
+UNIFI_URL="$url"; UNIFI_INSECURE="$insecure"
 UNIFI_API_BASE="$(unifi_api_base_for "$url")"
 echo "Checking $UNIFI_API_BASE …"
-unifi_http "/sites?limit=50" "$key"
+unifi_http "/sites?limit=200" "$key"
 if reason=$(unifi_describe_http_failure); then
   echo "Failed: $reason" >&2
   exit 1
 fi
 
-sites=$(jq -r '.data[]? | "\(.name // .internalReference) (\(.id))"' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
-if [[ -z $sites ]]; then
+# The site is picked from what the controller actually reports rather than
+# typed, so a name cannot be misspelt. Stored by id: names can be renamed.
+mapfile -t site_ids < <(jq -r '.data[]? | .id // empty' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
+mapfile -t site_labels < <(jq -r '.data[]? | select(.id != null) | "\(.name // .internalReference // .id)"' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
+if (( ${#site_ids[@]} == 0 )); then
   echo "The controller answered but listed no sites." >&2
   exit 1
 fi
-if [[ -n $site ]] && ! jq -e --arg s "$site" '.data[]? | select(.id == $s or .name == $s or .internalReference == $s)' \
-     >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
-  echo "No site named \"$site\". Available:" >&2
-  sed 's/^/  /' <<<"$sites" >&2
-  exit 1
+
+if (( ${#site_ids[@]} == 1 )); then
+  site="${site_ids[0]}"
+  echo "Site: ${site_labels[0]}"
+else
+  echo
+  echo "Sites on this controller:"
+  default_choice=1
+  for i in "${!site_ids[@]}"; do
+    marker=""
+    if [[ ${site_ids[$i]} == "$UNIFI_SITE" || ${site_labels[$i]} == "$UNIFI_SITE" ]]; then
+      marker="  (current)"
+      default_choice=$(( i + 1 ))
+    fi
+    printf '  %2d) %s%s\n' "$(( i + 1 ))" "${site_labels[$i]}" "$marker"
+  done
+  while :; do
+    read -r -p "Choose a site [$default_choice]: " choice
+    choice="${choice:-$default_choice}"
+    if [[ $choice =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#site_ids[@]} )); then
+      break
+    fi
+    echo "Enter a number between 1 and ${#site_ids[@]}."
+  done
+  site="${site_ids[$(( choice - 1 ))]}"
+  echo "Site: ${site_labels[$(( choice - 1 ))]}"
 fi
 
 printf '%s' "$key" | unifi_store_api_key || { echo "Could not store the API key in the keyring." >&2; exit 1; }
 unset key
 unifi_save_config "$url" "$site" "$insecure"
 
-echo "Signed in. Sites on this controller:"
-sed 's/^/  /' <<<"$sites"
+echo "Signed in."
 nudge_widget
