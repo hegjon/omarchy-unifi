@@ -26,7 +26,16 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   `/proxy/network/integration/v1/…` endpoint, needs the API key
   (`X-API-KEY`), so read it in a browser signed in to the console. Prefer it
   over memory when a field name or `state` value is in doubt; `normalize.jq`
-  and `test/fixtures/network.json` must agree with it.
+  and `test/fixtures/network.json` must agree with it. The OpenAPI document
+  behind that page is not served on the API-key path (every guess under
+  `/proxy/network/integration/…` is 404), so it has to be read in a browser.
+- Checked live against Network 10.5.67 (UCG Fiber) on 2026-08-18: device
+  keys are `features, firmwareUpdatable, firmwareVersion, id, interfaces,
+  ipAddress, macAddress, model, name, state, supported`; client keys are
+  `access, connectedAt, id, ipAddress, macAddress, name, type,
+  uplinkDeviceId`; `features` seen: `accessPoint`, `switching` (the gateway
+  reports only `switching`, hence the model-name test); `/info` returns
+  `{"applicationVersion": …}`. A gateway's `ipAddress` is its WAN address.
 
 ## Things to keep
 
