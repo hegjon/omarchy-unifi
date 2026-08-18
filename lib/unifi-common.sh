@@ -53,10 +53,10 @@ unifi_api_base_for() {
 unifi_load_config() {
   [[ -r $UNIFI_CONFIG_FILE ]] || return 1
   local key value
+  # shellcheck disable=SC2034  # UNIFI_SITE is read by unifi-fetch and unifi-login
   while IFS='=' read -r key value; do
     case "$key" in
       url) UNIFI_URL="$value" ;;
-      # shellcheck disable=SC2034  # read by unifi-fetch and unifi-login
       site) UNIFI_SITE="$value" ;;
       insecure) UNIFI_INSECURE="$value" ;;
     esac
