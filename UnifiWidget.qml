@@ -359,6 +359,14 @@ Panel {
         // against the neighbouring icons, their ink is about 11 px to the
         // canvas's 16. Scale to the icon font size, then a little under.
         iconSize: Math.round(Style.bar.iconFont * 0.85)
+        // The offline badge sits over the top-right corner, which is where
+        // the mark's pixel dots are — the one part that says "Ubiquiti"
+        // rather than "a U". Mirror the mark while the badge shows so the
+        // dots swap to the uncovered side.
+        transform: Scale {
+          origin.x: Math.round(Style.bar.iconFont * 0.85) / 2
+          xScale: offlineBadge.visible ? -1 : 1
+        }
         // Same rule as the text glyph: urgent while something is offline.
         color: button.active && button.useActiveColor ? button.activeColor : button.foreground
         Behavior on color { ColorAnimation { duration: 160 } }
