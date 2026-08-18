@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Exercise normalize.jq against a synthetic Integration API response.
+# No credentials and no network: everything here runs off fixtures.
+
+set -uo pipefail
+
+TEST_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly TEST_DIR
+PLUGIN_DIR="$(dirname -- "$TEST_DIR")"
+readonly PLUGIN_DIR
+readonly NORMALIZE="$PLUGIN_DIR/normalize.jq"
+
+passed=0
+failed=0
+
+check() {
+  local name="$1" fixture="$2" filter="$3"
+  local out
+  if ! out=$(jq -f "$NORMALIZE" <"$TEST_DIR/fixtures/$fixture" 2>&1); then
+    printf '  FAIL  %s\n        normalize.jq errored: %s\n' "$name" "$out"
+    (( failed++ ))
+    return
+  fi
+  if jq -e "$filter" >/dev/null 2>&1 <<<"$out"; then
+    printf '  ok    %s\n' "$name"
+    (( passed++ ))
+  else
+    printf '  FAIL  %s\n        expected: %s\n' "$name" "$filter"
+    (( failed++ ))
+  fi
+}
+
+echo "normalize.jq"
+
+check "reads the site name" network.json '.site.name == "Default"'
+check "counts every device" network.json '.summary.devices == 5'
+check "counts online devices" network.json '.summary.online == 3'
+# CONNECTION_INTERRUPTED means the controller cannot hear the device; for the
+# badge and the notification that is offline.
+check "counts OFFLINE and CONNECTION_INTERRUPTED as offline" network.json '.summary.offline == 2'
+check "counts devices with a firmware update" network.json '.summary.updatable == 1'
+
+check "counts all clients, whatever their type" network.json '.summary.clients == 5'
+check "splits wired and wireless clients" network.json '.summary.wired == 2 and .summary.wireless == 2'
+check "attributes clients to their uplink device" network.json \
+  '(first(.devices[] | select(.name == "Living Room AP")) | .clients == 2)'
+check "a device with no clients reads zero, not null" network.json \
+  '(first(.devices[] | select(.name == "Garage AP")) | .clients == 0)'
+
+check "classifies access points" network.json \
+  '(first(.devices[] | select(.name == "Living Room AP")) | .kind == "ap")'
+check "classifies switches" network.json \
+  '(first(.devices[] | select(.name == "Office Switch")) | .kind == "switch")'
+check "access points sort before switches" network.json \
+  '([.devices[].kind] | index("ap") < index("switch"))'
+check "a nameless device falls back to its model" network.json \
+  '(.devices | map(select(.mac == "aa:bb:cc:00:00:05")) | .[0].name == "USW-Flex-Mini")'
+check "keeps the raw state alongside the bucket" network.json \
+  '(.devices | map(select(.mac == "aa:bb:cc:00:00:05")) | .[0].state == "CONNECTION_INTERRUPTED" and .[0].bucket == "offline")'
+
+echo
+echo "degenerate input"
+for payload in '{}' '{"devices":[]}' '{"devices":[{}],"clients":[{}]}'; do
+  if out=$(jq -f "$NORMALIZE" <<<"$payload" 2>&1); then
+    printf '  ok    survives %s\n' "$payload"
+    (( passed++ ))
+  else
+    printf '  FAIL  %s errored: %s\n' "$payload" "$out"
+    (( failed++ ))
+  fi
+done
+if jq -f "$NORMALIZE" <<<'{"devices":[{}]}' |
+   jq -e '.devices[0].bucket == "offline" and .devices[0].name == "Device"' >/dev/null 2>&1; then
+  printf '  ok    an empty device object still renders\n'
+  (( passed++ ))
+else
+  printf '  FAIL  an empty device object still renders\n'
+  (( failed++ ))
+fi
+
+echo
+printf '%d passed, %d failed\n' "$passed" "$failed"
+(( failed == 0 ))

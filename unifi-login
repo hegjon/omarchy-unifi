@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Configure the UniFi plugin: controller URL, TLS choice, site and API key.
+#
+# Usage: unifi-login            interactive setup
+#        unifi-login --status   show what is configured (never the key)
+#        unifi-login --forget   remove the stored key and configuration
+#
+# The API key is created in the UniFi Network application under
+# Settings → Control Plane → Integrations (Network 9.0 or newer). It is read
+# without echo, stored in the keyring, and never written anywhere else.
+
+set -uo pipefail
+umask 077
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
+# shellcheck source=lib/unifi-common.sh
+source "$SCRIPT_DIR/lib/unifi-common.sh" || {
+  echo "lib/unifi-common.sh is missing from the plugin folder" >&2
+  exit 1
+}
+
+for cmd in curl jq secret-tool; do
+  command -v "$cmd" >/dev/null 2>&1 || { echo "$cmd is not installed" >&2; exit 1; }
+done
+
+nudge_widget() {
+  command -v omarchy-shell >/dev/null 2>&1 || return 0
+  omarchy-shell -q "$UNIFI_PLUGIN_ID" refresh >/dev/null 2>&1 || true
+}
+
+show_status() {
+  if unifi_load_config; then
+    echo "Controller: $UNIFI_URL"
+    echo "API base:   $UNIFI_API_BASE"
+    echo "Site:       ${UNIFI_SITE:-(first site)}"
+    echo "TLS:        $([[ $UNIFI_INSECURE == 1 ]] && echo 'self-signed allowed' || echo 'verified')"
+  else
+    echo "Controller: not configured"
+  fi
+  if [[ -n $(unifi_api_key) ]]; then echo "API key:    stored in keyring"
+  else echo "API key:    none"; fi
+}
+
+case "${1:-}" in
+  --status) show_status; exit 0 ;;
+  --forget)
+    unifi_clear_api_key
+    rm -f "$UNIFI_CONFIG_FILE"
+    echo "Removed the stored API key and configuration."
+    nudge_widget
+    exit 0 ;;
+  "") ;;
+  *) echo "usage: unifi-login [--status|--forget]" >&2; exit 2 ;;
+esac
+
+echo "UniFi for Omarchy — setup"
+echo
+echo "Create an API key in the UniFi Network application:"
+echo "  Settings → Control Plane → Integrations → Create API Key"
+echo
+
+unifi_load_config || true
+
+read -r -e -p "Controller URL [${UNIFI_URL:-https://192.168.1.1}]: " url
+url="${url:-${UNIFI_URL:-https://192.168.1.1}}"
+[[ $url == http://* || $url == https://* ]] || url="https://$url"
+url="${url%/}"
+
+default_insecure=$([[ ${UNIFI_INSECURE:-0} == 1 ]] && echo Y || echo N)
+read -r -p "Allow a self-signed certificate (most consoles have one)? [y/N, current $default_insecure]: " answer
+answer="${answer:-$default_insecure}"
+insecure=$([[ $answer =~ ^[Yy] ]] && echo 1 || echo 0)
+
+read -r -e -p "Site name or id [${UNIFI_SITE:-first site}]: " site
+site="${site:-$UNIFI_SITE}"
+
+existing_key="$(unifi_api_key)"
+if [[ -n $existing_key ]]; then
+  read -r -s -p "API key (leave empty to keep the stored one): " key
+else
+  read -r -s -p "API key: " key
+fi
+echo
+key="${key:-$existing_key}"
+[[ -n $key ]] || { echo "An API key is required." >&2; exit 1; }
+unset existing_key
+
+# Try the key before storing anything, so a typo does not replace a working
+# configuration.
+UNIFI_URL="$url"; UNIFI_INSECURE="$insecure"; UNIFI_SITE="$site"
+UNIFI_API_BASE="$(unifi_api_base_for "$url")"
+echo "Checking $UNIFI_API_BASE …"
+unifi_http "/sites?limit=50" "$key"
+if reason=$(unifi_describe_http_failure); then
+  echo "Failed: $reason" >&2
+  exit 1
+fi
+
+sites=$(jq -r '.data[]? | "\(.name // .internalReference) (\(.id))"' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
+if [[ -z $sites ]]; then
+  echo "The controller answered but listed no sites." >&2
+  exit 1
+fi
+if [[ -n $site ]] && ! jq -e --arg s "$site" '.data[]? | select(.id == $s or .name == $s or .internalReference == $s)' \
+     >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
+  echo "No site named \"$site\". Available:" >&2
+  sed 's/^/  /' <<<"$sites" >&2
+  exit 1
+fi
+
+printf '%s' "$key" | unifi_store_api_key || { echo "Could not store the API key in the keyring." >&2; exit 1; }
+unset key
+unifi_save_config "$url" "$site" "$insecure"
+
+echo "Signed in. Sites on this controller:"
+sed 's/^/  /' <<<"$sites"
+nudge_widget

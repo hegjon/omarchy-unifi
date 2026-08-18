@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Fetch sites, devices and clients from a UniFi Network controller and print
+# the flat model the widget renders.
+#
+# Usage: unifi-fetch
+#
+# Prints the normalized document on success, or {"error":"…"} on failure —
+# exiting 0 either way so the widget can render the reason instead of guessing
+# why a process died. A failure that sign-in would fix carries "needsLogin".
+#
+# Uses the official Network Integration API (Network 9.0+), authenticated with
+# an API key from the controller's Control Plane → Integrations page. The key
+# is read from the keyring and never reaches argv.
+
+set -uo pipefail
+umask 077
+
+readonly PAGE_LIMIT=200
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+readonly NORMALIZE="$SCRIPT_DIR/normalize.jq"
+
+# shellcheck source=lib/unifi-common.sh
+source "$SCRIPT_DIR/lib/unifi-common.sh" || {
+  printf '{"error":"lib/unifi-common.sh is missing from the plugin folder"}\n'
+  exit 0
+}
+
+unifi_require_commands
+[[ -r $NORMALIZE ]] || die "normalize.jq is missing from the plugin folder"
+
+unifi_load_config || die_needs_login "No UniFi controller configured"
+API_KEY="$(unifi_api_key)"
+[[ -n $API_KEY ]] || die_needs_login "No UniFi API key stored"
+
+# Fetch every page of a list endpoint into FETCHED as one JSON array. Called
+# directly, not inside $(...): a failure has to end the whole script, and
+# `exit` inside a command substitution ends only the subshell — the error JSON
+# would be captured as if it were data.
+FETCHED='[]'
+fetch_all() { # path
+  local offset=0 total items all='[]' reason
+  while :; do
+    unifi_http "$1?offset=$offset&limit=$PAGE_LIMIT" "$API_KEY"
+    if reason=$(unifi_describe_http_failure); then
+      case "$UNIFI_HTTP_CODE" in
+        401|403) die_needs_login "$reason" ;;
+        *) die "$reason" ;;
+      esac
+    fi
+    jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY" ||
+      die "The controller returned a malformed response for $1"
+    items=$(jq -c '.data | length' <<<"$UNIFI_HTTP_BODY")
+    total=$(jq -r '.totalCount // 0' <<<"$UNIFI_HTTP_BODY")
+    all=$(jq -c --argjson page "$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")" '. + $page' <<<"$all")
+    (( offset += items ))
+    [[ $total =~ ^[0-9]+$ ]] || total=0
+    (( items > 0 && offset < total )) || break
+  done
+  FETCHED="$all"
+}
+
+fetch_all "/sites"
+sites="$FETCHED"
+
+# The site is chosen by name (the "default" site is called Default in the UI)
+# or by id; with nothing configured the first one is used, which is the only
+# one on a typical home console.
+site=$(jq -c --arg want "$UNIFI_SITE" '
+  if length == 0 then null
+  elif $want == "" then .[0]
+  else (map(select(.id == $want or .name == $want or .internalReference == $want)) | .[0]) // null
+  end' <<<"$sites")
+[[ $site != null ]] || {
+  if [[ -n $UNIFI_SITE ]]; then die "No site named \"$UNIFI_SITE\" on this controller"
+  else die "The controller has no sites"; fi
+}
+site_id=$(jq -r '.id' <<<"$site")
+
+fetch_all "/sites/$site_id/devices"
+devices="$FETCHED"
+fetch_all "/sites/$site_id/clients"
+clients="$FETCHED"
+
+unset API_KEY
+
+jq -n --argjson site "$site" --argjson devices "$devices" --argjson clients "$clients" \
+  '{site: $site, devices: $devices, clients: $clients}' |
+  jq -f "$NORMALIZE" 2>/dev/null || die "Could not interpret the controller response"

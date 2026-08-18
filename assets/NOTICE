@@ -1,0 +1,10 @@
+assets/ubiquiti.svg is the "Ubiquiti" icon from Simple Icons
+(https://simpleicons.org/?q=ubiquiti), downloaded on 2026-08-18. Simple Icons
+releases its icon data under CC0 1.0 (https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md).
+
+The mark itself is a trade mark of Ubiquiti Inc. and is used here only to
+identify the service the plugin talks to. This plugin is not affiliated with,
+endorsed by, or supported by Ubiquiti.
+
+components/UbiquitiIcon.qml carries the same path data so the shell can tint
+it; keep the two in sync if the file is ever replaced.

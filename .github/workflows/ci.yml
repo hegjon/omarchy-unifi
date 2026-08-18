@@ -1,0 +1,46 @@
+name: CI
+
+# Hermetic: no credentials, no network, no controller. The QML is not linted
+# here because qmllint needs the Omarchy shell's own modules; run test/lint on
+# an Omarchy machine.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate manifest
+        run: ./test/test-manifest
+
+      - name: Check Bash syntax
+        run: bash -n unifi-fetch unifi-login lib/unifi-common.sh test/test-normalize test/test-manifest test/lint
+
+      - name: ShellCheck
+        run: |
+          shellcheck --severity=warning \
+            unifi-fetch unifi-login lib/unifi-common.sh \
+            test/test-normalize test/test-manifest test/lint
+
+      - name: Test response normalization
+        run: ./test/test-normalize
