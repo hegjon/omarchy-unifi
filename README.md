@@ -5,10 +5,10 @@ gateway on a site with its online state, model, address and how many clients
 hang off it, plus wired/wireless client totals. The bar icon carries a badge
 with the number of offline devices, and a notification fires when a device
 drops or comes back. Under the gateway it shows what is flowing through the
-WAN — download and upload right now and a graph of both since the shell
+WAN — download and upload right now, each with a graph since the shell
 started — plus CPU, memory, load and uptime. It is read-only.
 
-![The panel listing a gateway with its WAN rates, a graph and health line,
+![The panel listing a gateway with its WAN rates, two graphs and health line,
 then two access points and two switches with their state, address and client
 counts; one access point offline and one switch unreachable](preview.png)
 
