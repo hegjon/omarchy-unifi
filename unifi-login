@@ -64,8 +64,12 @@ echo
 
 unifi_load_config || true
 
-read -r -e -p "Controller URL [${UNIFI_URL:-https://192.168.1.1}]: " url
-url="${url:-${UNIFI_URL:-https://192.168.1.1}}"
+# On a UniFi network the gateway usually is the console, so offer it as the
+# default; 192.168.1.1 is only the fallback when no default route exists.
+default_gateway=$(ip -4 route show default 2>/dev/null | awk '/^default via/ { print $3; exit }')
+default_url="${UNIFI_URL:-https://${default_gateway:-192.168.1.1}}"
+read -r -e -p "Controller URL [$default_url]: " url
+url="${url:-$default_url}"
 [[ $url == http://* || $url == https://* ]] || url="https://$url"
 url="${url%/}"
 

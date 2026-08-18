@@ -41,7 +41,8 @@ stock Omarchy system.
    Integrations** and create an API key.
 2. Click the widget and press **Set up**, or run
    `~/.config/omarchy/plugins/hegjon.unifi/unifi-login` in a terminal.
-3. Enter the controller address (`https://192.168.1.1` for a typical console),
+3. Enter the controller address (your default gateway is offered, which on a
+   UniFi network is usually the console),
    say whether to accept its self-signed certificate, optionally pick a site,
    and paste the key.
 
