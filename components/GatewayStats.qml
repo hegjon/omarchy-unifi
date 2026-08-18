@@ -58,6 +58,17 @@ Column {
     return Math.round(value) + "%"
   }
 
+  // Download keeps the accent; upload takes the accent's complementary hue so
+  // the two graphs are told apart at a glance in any theme. A theme whose
+  // accent is grey has no hue to rotate, so it falls back to the urgent
+  // colour — the only other guaranteed-distinct token.
+  readonly property color downColor: Color.accent
+  readonly property color upColor: {
+    var a = Color.accent
+    if (a.hslSaturation < 0.2) return Color.urgent
+    return Qt.hsla((a.hslHue + 0.5) % 1, a.hslSaturation, a.hslLightness, 1)
+  }
+
   readonly property string downGlyph: String.fromCodePoint(0xF0045)   // md-arrow_down
   readonly property string upGlyph: String.fromCodePoint(0xF005D)     // md-arrow_up
 
@@ -81,8 +92,8 @@ Column {
   // One graph per direction, each on its own scale: upload is usually a
   // fraction of download, and on a shared axis it flattened into the
   // baseline. Same shape for both, so the eye compares them by height only.
-  RateGraph { key: "rx"; glyph: stats.downGlyph; label: "Download" }
-  RateGraph { key: "tx"; glyph: stats.upGlyph; label: "Upload" }
+  RateGraph { key: "rx"; glyph: stats.downGlyph; label: "Download"; tint: stats.downColor }
+  RateGraph { key: "tx"; glyph: stats.upGlyph; label: "Upload"; tint: stats.upColor }
 
   component RateGraph: Column {
     id: rate
@@ -90,6 +101,7 @@ Column {
     required property string key
     required property string glyph
     required property string label
+    required property color tint
 
     width: parent.width
     spacing: Style.space(2)
@@ -104,7 +116,7 @@ Column {
       Text {
         id: nowText
         text: rate.glyph + " " + stats.formatRate(rate.current)
-        color: Color.popups.text
+        color: rate.tint
         font.family: Style.font.family
         font.pixelSize: Style.font.caption
       }
@@ -127,8 +139,8 @@ Column {
       width: parent.width
       height: Style.space(40)
 
-      readonly property color lineColor: Color.accent
-      readonly property color fillColor: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.22)
+      readonly property color lineColor: rate.tint
+      readonly property color fillColor: Qt.rgba(rate.tint.r, rate.tint.g, rate.tint.b, 0.22)
       readonly property color axisColor: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.15)
 
       onWidthChanged: requestPaint()
