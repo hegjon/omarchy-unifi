@@ -85,30 +85,63 @@ unifi_clear_api_key() {
   secret-tool clear application "$UNIFI_PLUGIN_ID" type api-key 2>/dev/null || true
 }
 
+# Identifiers the controller hands back — site id, site internal reference,
+# device id — are spliced into URL paths and into the report cache file name.
+# Only a plain token is allowed there: the curl config below is delimited by
+# newlines and double quotes, and the cache path must stay inside its own
+# directory, so a controller (compromised, or merely odd) that returns
+# anything else is treated as if the identifier were missing.
+unifi_is_token() { # value
+  [[ $1 =~ ^[A-Za-z0-9_-]+$ ]]
+}
+
+# The curl config is line-oriented and its url is a quoted string, so a
+# newline, quote or backslash in any spliced value could turn data into a
+# directive (`output = ~/.bashrc`). Callers validate their tokens; this is
+# the backstop that refuses to run curl at all if anything slipped through.
+unifi_config_safe() { # value...
+  local v
+  for v in "$@"; do
+    [[ $v != *[$'\n\r"\\']* ]] || return 1
+  done
+}
+
+unifi_run_curl() { # config
+  local response
+  response=$(printf '%s\n' "$1" | curl --config - -m 20 -w '\n%{http_code}' 2>&1)
+  UNIFI_HTTP_CODE=$(tail -n1 <<<"$response")
+  UNIFI_HTTP_BODY=$(sed '$d' <<<"$response")
+}
+
+unifi_refuse_request() {
+  UNIFI_HTTP_CODE=000
+  UNIFI_HTTP_BODY='curl: (3) refused a request whose URL or key would break the curl config'
+}
+
 # One request against the API. Sets UNIFI_HTTP_CODE and UNIFI_HTTP_BODY in the
 # caller's shell; call it directly, not inside $(...). The API key is passed
 # as a header line inside the curl config on stdin, never as an argument.
 unifi_http() { # path-with-query api-key
-  local config response
+  local config
+  unifi_config_safe "$UNIFI_API_BASE" "$1" "$2" || { unifi_refuse_request; return; }
   config=$(printf 'url = "%s%s"\nheader = "X-API-KEY: %s"\nheader = "Accept: application/json"\nsilent\nshow-error\n' \
     "$UNIFI_API_BASE" "$1" "$2")
   [[ $UNIFI_INSECURE == 1 ]] && config+=$'\ninsecure'
-  response=$(printf '%s\n' "$config" | curl --config - -m 20 -w '\n%{http_code}' 2>&1)
-  UNIFI_HTTP_CODE=$(tail -n1 <<<"$response")
-  UNIFI_HTTP_BODY=$(sed '$d' <<<"$response")
+  unifi_run_curl "$config"
 }
 
 # A POST with a JSON body to an absolute URL, same conventions as unifi_http.
 # Used for the classic report API, which lives beside the Integration API
 # rather than under it.
+# The body is our own single-line jq output; it is checked all the same.
 unifi_http_post() { # url json-body api-key
-  local config response
+  local config
+  unifi_config_safe "$1" "$3" || { unifi_refuse_request; return; }
+  [[ $2 != *[$'\n\r']* ]] || { unifi_refuse_request; return; }
   config=$(printf 'url = "%s"\nheader = "X-API-KEY: %s"\nheader = "Accept: application/json"\nheader = "Content-Type: application/json"\ndata = %s\nsilent\nshow-error\n' \
     "$1" "$3" "$2")
   [[ $UNIFI_INSECURE == 1 ]] && config+=$'\ninsecure'
-  response=$(printf '%s\n' "$config" | curl --config - -m 20 -w '\n%{http_code}' 2>&1)
-  UNIFI_HTTP_CODE=$(tail -n1 <<<"$response")
-  UNIFI_HTTP_BODY=$(sed '$d' <<<"$response")
+  unifi_run_curl "$config"
 }
 
 # The classic Network API root that pairs with the Integration API base:

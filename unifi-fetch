@@ -77,7 +77,10 @@ site=$(jq -c --arg want "$UNIFI_SITE" '
   if [[ -n $UNIFI_SITE ]]; then die "No site named \"$UNIFI_SITE\" on this controller"
   else die "The controller has no sites"; fi
 }
-site_id=$(jq -r '.id' <<<"$site")
+site_id=$(jq -r '.id // empty' <<<"$site")
+# The id names URL paths and the report cache file from here on, so it has
+# to be a plain token; see unifi_is_token.
+unifi_is_token "$site_id" || die "The controller returned an unusable site id"
 
 fetch_all "/sites/$site_id/devices"
 devices="$FETCHED"
@@ -93,6 +96,7 @@ raw=$(jq -n --argjson site "$site" --argjson devices "$devices" --argjson client
 # here is not fatal — the fleet still renders, just without the graph.
 stats=null
 gateway_id=$(jq -r -f "$NORMALIZE" <<<"$raw" 2>/dev/null | jq -r '.gateway.id // empty' 2>/dev/null)
+unifi_is_token "$gateway_id" || gateway_id=""
 if [[ -n $gateway_id ]]; then
   unifi_http "/sites/$site_id/devices/$gateway_id/statistics/latest" "$API_KEY"
   if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e 'type == "object"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
@@ -105,13 +109,17 @@ fi
 # never fatal: `report` stays null and the widget graphs its own samples.
 # The buckets only move every five minutes, so the answer is cached for four
 # and every poll in between reuses it.
+# The classic API addresses the site by its internal reference; like the id,
+# it is only used if it is a plain token — otherwise the classic requests
+# are simply skipped.
+site_name=$(jq -r '.internalReference // empty' <<<"$site")
+unifi_is_token "$site_name" || site_name=""
 report=null
 report_cache="${XDG_RUNTIME_DIR:-/tmp}/omarchy-unifi/report-$site_id.json"
 if [[ -n $gateway_id ]]; then
   if [[ -f $report_cache ]] && (( $(date +%s) - $(stat -c %Y "$report_cache") < 240 )); then
     report=$(cat "$report_cache")
   else
-    site_name=$(jq -r '.internalReference // empty' <<<"$site")
     now_ms=$(( $(date +%s) * 1000 ))
     body=$(jq -cn --argjson end "$now_ms" \
       '{attrs: ["time", "wan-rx_bytes", "wan-tx_bytes"], start: ($end - 12 * 3600 * 1000), end: $end}')
@@ -119,7 +127,7 @@ if [[ -n $gateway_id ]]; then
       unifi_http_post "$(unifi_classic_base)/api/s/$site_name/stat/report/5minutes.gw" "$body" "$API_KEY"
       if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
         report=$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")
-        mkdir -p "$(dirname "$report_cache")" && printf '%s' "$report" >"$report_cache"
+        mkdir -p -m 700 "$(dirname "$report_cache")" && printf '%s' "$report" >"$report_cache"
       fi
     fi
   fi
@@ -137,7 +145,6 @@ if [[ -n $gateway_id ]]; then
   if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
     wans=$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")
   fi
-  site_name=$(jq -r '.internalReference // empty' <<<"$site")
   if [[ -n $site_name ]]; then
     UNIFI_API_BASE_SAVED="$UNIFI_API_BASE"
     UNIFI_API_BASE="$(unifi_classic_base)"

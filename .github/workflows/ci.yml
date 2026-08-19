@@ -34,13 +34,16 @@ jobs:
         run: ./test/test-manifest
 
       - name: Check Bash syntax
-        run: bash -n unifi-fetch unifi-login lib/unifi-common.sh test/test-normalize test/test-manifest test/lint
+        run: bash -n unifi-fetch unifi-login lib/unifi-common.sh test/test-normalize test/test-manifest test/test-fetch test/lint
 
       - name: ShellCheck
         run: |
           shellcheck --severity=warning \
             unifi-fetch unifi-login lib/unifi-common.sh \
-            test/test-normalize test/test-manifest test/lint
+            test/test-normalize test/test-manifest test/test-fetch test/lint
 
       - name: Test response normalization
         run: ./test/test-normalize
+
+      - name: Test the fetch script against a stub controller
+        run: ./test/test-fetch

@@ -5,7 +5,8 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
 
 ## Verifying changes
 
-- `test/lint` (qmllint), `test/test-normalize`, `test/test-manifest`, and
+- `test/lint` (qmllint), `test/test-normalize`, `test/test-fetch` (stub
+  controller, checks hostile ids), `test/test-manifest`, and
   `omarchy-plugin-validate .`. `shellcheck` is not installed locally; CI runs it.
 - The shell hot-reloads the plugin on file change, but not reliably for
   everything. For a trustworthy check run `omarchy-restart-shell`, wait ~7 s,
