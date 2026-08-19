@@ -29,6 +29,8 @@ Column {
     spacing: Style.space(10)
 
     Text {
+
+      textFormat: Text.PlainText
       id: glyph
       anchors.verticalCenter: parent.verticalCenter
       width: Style.space(22)
@@ -48,6 +50,8 @@ Column {
         spacing: Style.space(8)
 
         Text {
+
+          textFormat: Text.PlainText
           width: parent.width - stateText.implicitWidth - Style.space(8)
           elide: Text.ElideRight
           text: row.device.name
@@ -58,6 +62,8 @@ Column {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           id: stateText
           text: row.host.stateLabel(row.device.state)
           color: row.host.bucketColor(row.device.bucket)
@@ -71,6 +77,8 @@ Column {
         spacing: Style.space(8)
 
         Text {
+
+          textFormat: Text.PlainText
           width: parent.width - clientText.implicitWidth - Style.space(8)
           elide: Text.ElideRight
           text: [row.device.model, row.device.ip].filter(function(s) { return s !== "" }).join("  ·  ")
@@ -80,6 +88,8 @@ Column {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           id: clientText
           text: row.device.online && row.device.kind !== "gateway"
             ? row.device.clients + (row.device.clients === 1 ? " client" : " clients")

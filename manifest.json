@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "hegjon.unifi",
   "name": "UniFi",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "author": "Jonny Heggheim",
   "license": "MIT",
   "description": "Watch your UniFi network from the Omarchy bar: access points, switches and gateways with their online state and client counts, and a notification when a device drops.",

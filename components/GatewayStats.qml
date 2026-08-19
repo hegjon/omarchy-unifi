@@ -115,6 +115,8 @@ Column {
       width: parent.width
 
       Text {
+
+        textFormat: Text.PlainText
         id: nowText
         text: rate.glyph + " " + stats.formatRate(rate.current)
         color: rate.tint
@@ -123,6 +125,8 @@ Column {
       }
 
       Text {
+
+        textFormat: Text.PlainText
         width: parent.width - nowText.implicitWidth
         horizontalAlignment: Text.AlignRight
         elide: Text.ElideLeft
@@ -203,6 +207,7 @@ Column {
 
   // Health line.
   Text {
+    textFormat: Text.PlainText
     width: parent.width
     elide: Text.ElideRight
     text: "CPU " + stats.formatPct(stats.latest ? stats.latest.cpuPct : null)
@@ -218,6 +223,7 @@ Column {
   // primary link's address and ISP head the section; every link then gets a
   // row of its own, since a second WAN that is down is worth seeing.
   Text {
+    textFormat: Text.PlainText
     width: parent.width
     visible: stats.wan !== null && stats.wan !== undefined
     elide: Text.ElideRight
@@ -236,6 +242,7 @@ Column {
   // ISP names run long ("Drustvo za telekomunikacije MTEL DOO"), so this
   // wraps rather than being cut off after the address.
   Text {
+    textFormat: Text.PlainText
     width: parent.width
     visible: !!(stats.wan && stats.wan.isp)
     wrapMode: Text.WordWrap
@@ -262,6 +269,8 @@ Column {
       readonly property bool unused: linkRow.modelData.state === "unused"
 
       Text {
+
+        textFormat: Text.PlainText
         id: linkDetail
         width: parent.width - linkState.implicitWidth - Style.space(8)
         elide: Text.ElideRight
@@ -286,6 +295,8 @@ Column {
       }
 
       Text {
+
+        textFormat: Text.PlainText
         id: linkState
         text: linkRow.up ? "Online" : (linkRow.unused ? "Not connected" : "Down")
         color: linkRow.up ? Color.popups.text : (linkRow.unused ? stats.host.detailColor : Color.urgent)

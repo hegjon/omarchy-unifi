@@ -12,6 +12,10 @@ import "./components"
 // All network work happens in unifi-fetch, which prints the normalized model
 // on stdout and reports failures as {"error":…} rather than dying, so the panel
 // can always render a reason. Nothing here ever touches the API key.
+//
+// Names, models, ISP and link names are controller data, so every Text in
+// this plugin is PlainText: AutoText would render markup found in them, and
+// an <img> tag would make the shell fetch whatever URL it names.
 Panel {
   id: root
 
@@ -292,12 +296,23 @@ Panel {
     notifiedAt = stamps
   }
 
+  // The title is a device name the controller chose. omarchy-notification-send
+  // option-parses every argument, including the ones after the headline, and
+  // hands unknown ones to notify-send — so a name that begins with a dash
+  // could smuggle in a hint such as omarchy-exec, which the shell runs on
+  // click. A leading dash is therefore swapped out before it becomes argv.
+  function notificationArg(text, fallback) {
+    var s = String(text || fallback)
+    return s.charAt(0) === "-" ? "\u2011" + s.slice(1) : s   // U+2011 looks the same, is not an option
+  }
+
   function notify(title, body, urgency) {
     notifyProcess.running = false
     notifyProcess.command = [
-      "omarchy-notification-send", "-a", "UniFi",
+      "omarchy-notification-send",
+      "--app-name", "UniFi",
       "-u", urgency || "normal",
-      String(title || "Device"), String(body || "")
+      notificationArg(title, "Device"), notificationArg(body, "")
     ]
     notifyProcess.running = true
   }
@@ -422,6 +437,8 @@ Panel {
       border.color: Color.bar.background
 
       Text {
+
+        textFormat: Text.PlainText
         id: badgeLabel
         anchors.centerIn: parent
         text: String(root.summary.offline)
@@ -505,6 +522,8 @@ Panel {
           visible: root.needsLogin
 
           Text {
+
+            textFormat: Text.PlainText
             width: parent.width
             wrapMode: Text.WordWrap
             text: root.lastError !== "" ? root.lastError : "No UniFi controller configured."
@@ -514,6 +533,8 @@ Panel {
           }
 
           Text {
+
+            textFormat: Text.PlainText
             width: parent.width
             wrapMode: Text.WordWrap
             text: "Enter your controller's address and an API key from "
@@ -531,6 +552,8 @@ Panel {
           }
 
           Text {
+
+            textFormat: Text.PlainText
             width: parent.width
             wrapMode: Text.WordWrap
             text: "Or run unifi-login in a terminal."
@@ -541,6 +564,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           width: parent.width
           wrapMode: Text.WordWrap
           visible: !root.needsLogin && root.lastError !== ""
@@ -551,6 +576,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           width: parent.width
           visible: !root.initialized && root.lastError === ""
           text: "Loading…"
@@ -561,6 +588,7 @@ Panel {
 
         // Client summary
         Text {
+          textFormat: Text.PlainText
           width: parent.width
           visible: root.initialized && !root.needsLogin && root.lastError === ""
           text: root.summary.clients + " clients"
@@ -573,6 +601,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           width: parent.width
           visible: root.initialized && !root.needsLogin && root.lastError === "" && root.devices.length === 0
           text: "No devices on this site."
@@ -638,6 +668,8 @@ Panel {
         }
 
         Text {
+
+          textFormat: Text.PlainText
           width: parent.width
           text: root.refreshing
             ? "Refreshing…"
