@@ -100,8 +100,8 @@ start_stub() { # sites-json [mode]
   STUB_FIXTURE="$TEST_DIR/fixtures/network.json" STUB_SITES="$1" STUB_MODE="${2:-}" STUB_LOG="$work/requests" \
     python3 "$work/stub.py" >"$work/port" 2>/dev/null &
   stub_pid=$!
-  local i
-  for i in $(seq 1 50); do
+  local _
+  for _ in $(seq 1 50); do
     [[ -s $work/port ]] && break
     sleep 0.1
   done

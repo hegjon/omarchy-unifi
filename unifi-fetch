@@ -132,7 +132,9 @@ if [[ -n $gateway_id ]]; then
       unifi_http_post "$(unifi_classic_base)/api/s/$site_name/stat/report/5minutes.gw" "$body" "$API_KEY"
       if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
         report=$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")
-        mkdir -p -m 700 "$(dirname "$report_cache")" && printf '%s' "$report" >"$report_cache"
+        # The parent is $XDG_RUNTIME_DIR, already ours; only our own directory
+        # needs creating, and umask 077 above keeps it private.
+        mkdir -p "$(dirname "$report_cache")" && printf '%s' "$report" >"$report_cache"
       fi
     fi
   fi
