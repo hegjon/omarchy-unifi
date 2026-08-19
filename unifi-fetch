@@ -17,6 +17,10 @@ set -uo pipefail
 umask 077
 
 readonly PAGE_LIMIT=200
+# Pages are followed while the controller keeps reporting more, so a
+# controller that always claims more would keep the loop going. No site
+# has anywhere near this many devices or clients.
+readonly MAX_PAGES=50
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
@@ -41,8 +45,9 @@ API_KEY="$(unifi_api_key)"
 # would be captured as if it were data.
 FETCHED='[]'
 fetch_all() { # path
-  local offset=0 total items all='[]' reason
+  local offset=0 total items all='[]' reason pages=0
   while :; do
+    (( pages++ < MAX_PAGES )) || die "The controller keeps paging $1 without end"
     unifi_http "$1?offset=$offset&limit=$PAGE_LIMIT" "$API_KEY"
     if reason=$(unifi_describe_http_failure); then
       case "$UNIFI_HTTP_CODE" in

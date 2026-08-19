@@ -90,10 +90,17 @@ unifi_clear_api_key() {
 # Only a plain token is allowed there: the curl config below is delimited by
 # newlines and double quotes, and the cache path must stay inside its own
 # directory, so a controller (compromised, or merely odd) that returns
-# anything else is treated as if the identifier were missing.
+# anything else is treated as if the identifier were missing. Real ids are
+# UUIDs (36 chars) and internal references a few chars; the length cap only
+# keeps that assumption explicit.
 unifi_is_token() { # value
-  [[ $1 =~ ^[A-Za-z0-9_-]+$ ]]
+  [[ ${#1} -le 128 && $1 =~ ^[A-Za-z0-9_-]+$ ]]
 }
+
+# The largest response we are prepared to hold: a body is read whole into a
+# shell variable and pushed through jq, so a controller must not be able to
+# make the shell swallow gigabytes. A page of 200 devices is well under 1 MB.
+readonly UNIFI_MAX_BODY_BYTES=$(( 16 * 1024 * 1024 ))
 
 # The curl config is line-oriented and its url is a quoted string, so a
 # newline, quote or backslash in any spliced value could turn data into a
@@ -106,11 +113,20 @@ unifi_config_safe() { # value...
   done
 }
 
+# curl's own exit status is appended after the http code: an oversized body
+# arrives with a perfectly good 200 and only curl (63) knows it was cut short.
 unifi_run_curl() { # config
-  local response
-  response=$(printf '%s\n' "$1" | curl --config - -m 20 -w '\n%{http_code}' 2>&1)
+  local response status
+  response=$(printf '%s\n' "$1" | curl --config - -m 20 --max-filesize "$UNIFI_MAX_BODY_BYTES" -w '\n%{http_code}' 2>&1
+    printf '\n%s' "${PIPESTATUS[1]}")
+  status=$(tail -n1 <<<"$response")
+  response=$(sed '$d' <<<"$response")
   UNIFI_HTTP_CODE=$(tail -n1 <<<"$response")
   UNIFI_HTTP_BODY=$(sed '$d' <<<"$response")
+  if [[ $status == 63 ]]; then
+    UNIFI_HTTP_CODE=000
+    UNIFI_HTTP_BODY="curl: (63) response larger than $(( UNIFI_MAX_BODY_BYTES / 1024 / 1024 )) MB"
+  fi
 }
 
 unifi_refuse_request() {
@@ -163,6 +179,8 @@ unifi_describe_http_failure() {
       local reason
       reason=$(head -n1 <<<"$UNIFI_HTTP_BODY" | sed 's/^curl: ([0-9]*) //')
       case "$reason" in
+        *"response larger"*)
+          printf 'The controller sent a %s' "$reason" ;;
         *"certificate"*|*"SSL"*)
           printf 'TLS verification failed — re-run unifi-login and allow the self-signed certificate' ;;
         "") printf 'Could not reach %s' "$UNIFI_URL" ;;

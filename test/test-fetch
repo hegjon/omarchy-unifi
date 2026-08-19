@@ -46,6 +46,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 fixture = json.load(open(os.environ["STUB_FIXTURE"]))
 sites = json.loads(os.environ["STUB_SITES"])
+mode = os.environ.get("STUB_MODE", "")
 log = open(os.environ["STUB_LOG"], "a")
 
 class H(BaseHTTPRequestHandler):
@@ -67,6 +68,18 @@ class H(BaseHTTPRequestHandler):
         for kind in ("devices", "clients"):
             if p.endswith("/" + kind):
                 items = fixture[kind]
+                if mode == "endless":
+                    # Always one more page than has been fetched.
+                    return self._send(200, {"data": items, "totalCount": 10**9})
+                if mode == "huge" and kind == "devices":
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"data":[')
+                    for _ in range(40 * 1024):   # ~40 MB of one repeated device
+                        self.wfile.write((json.dumps(items[0]) + ",").ljust(1024).encode())
+                    self.wfile.write(json.dumps(items[0]).encode() + b'],"totalCount":1}')
+                    return
                 return self._send(200, {"data": items, "totalCount": len(items)})
         self._send(404, {"error": "unknown"})
     def do_POST(self):
@@ -83,8 +96,8 @@ failed=0
 ok()   { printf '  ok    %s\n' "$1"; (( passed++ )); }
 fail() { printf '  FAIL  %s\n        %s\n' "$1" "$2"; (( failed++ )); }
 
-start_stub() { # sites-json
-  STUB_FIXTURE="$TEST_DIR/fixtures/network.json" STUB_SITES="$1" STUB_LOG="$work/requests" \
+start_stub() { # sites-json [mode]
+  STUB_FIXTURE="$TEST_DIR/fixtures/network.json" STUB_SITES="$1" STUB_MODE="${2:-}" STUB_LOG="$work/requests" \
     python3 "$work/stub.py" >"$work/port" 2>/dev/null &
   stub_pid=$!
   local i
@@ -151,6 +164,28 @@ if jq -e '.error == null' >/dev/null 2>&1 <<<"$out" && [[ ! -e $HOME/pwned2 ]] \
 else
   fail "skips the classic API when the internal reference is not a plain token" "$out
 $(cat "$work/requests" 2>/dev/null)"
+fi
+stop_stub
+
+# A controller that always reports more pages must not keep the fetch going.
+good_sites=$(jq -c '[.site]' "$TEST_DIR/fixtures/network.json")
+start_stub "$good_sites" endless
+out=$(timeout 60 "$PLUGIN_DIR/unifi-fetch")
+if jq -e '.error | test("without end")' >/dev/null 2>&1 <<<"$out" \
+   && (( $(grep -c devices "$work/requests") <= 50 )); then
+  ok "stops following pages after a bounded number"
+else
+  fail "stops following pages after a bounded number" "$out ($(grep -c devices "$work/requests") device requests)"
+fi
+stop_stub
+
+# Nor may it make the shell hold an arbitrarily large body.
+start_stub "$good_sites" huge
+out=$(timeout 60 "$PLUGIN_DIR/unifi-fetch")
+if jq -e '.error | test("larger than")' >/dev/null 2>&1 <<<"$out"; then
+  ok "gives up on a response body over the size limit"
+else
+  fail "gives up on a response body over the size limit" "${out:0:300}"
 fi
 stop_stub
 
