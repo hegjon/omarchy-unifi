@@ -21,6 +21,11 @@
 #       resolve without Qt private types. The handler only uses exitCode.
 #
 # Anything else — especially [unqualified] — is worth fixing.
+#
+# After qmllint, every Text block (including the shell's Text-derived
+# PanelSectionHeader) must set textFormat: Text.PlainText. Names, models,
+# ISP and link names are controller data, and AutoText would render markup
+# in them — an <img> tag makes the shell fetch a URL.
 
 set -uo pipefail
 
@@ -60,6 +65,23 @@ for qml in "$PLUGIN_DIR"/*.qml "$PLUGIN_DIR"/components/*.qml; do
     expected=$(grep -cE 'missing-property|signal-handler-parameters' <<<"$output")
     printf '  clean (%s expected singleton/signal warnings suppressed)\n' "$expected"
   fi
+done
+
+# Flag any Text-like block whose body never sets PlainText. Bodies are
+# followed by brace depth; a Text nested inside a Text is counted on its own.
+for qml in "$PLUGIN_DIR"/*.qml "$PLUGIN_DIR"/components/*.qml; do
+  missing=$(awk '
+    /^[[:space:]]*(Text|PanelSectionHeader) \{/ { n++; start[n] = NR; depth[n] = 0; plain[n] = 0 }
+    n > 0 {
+      if ($0 ~ /textFormat:[[:space:]]*Text\.PlainText/) plain[n] = 1
+      o = gsub(/\{/, "{"); c = gsub(/\}/, "}")
+      depth[n] += o - c
+      if (depth[n] <= 0) { if (!plain[n]) print start[n]; n-- }
+    }' "$qml")
+  for line in $missing; do
+    echo "${qml#"$PLUGIN_DIR"/}:$line: Text without textFormat: Text.PlainText"
+    status=1
+  done
 done
 
 exit "$status"

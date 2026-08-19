@@ -15,7 +15,9 @@ import "./components"
 //
 // Names, models, ISP and link names are controller data, so every Text in
 // this plugin is PlainText: AutoText would render markup found in them, and
-// an <img> tag would make the shell fetch whatever URL it names.
+// an <img> tag would make the shell fetch whatever URL it names. That goes
+// for the shell's own Text-derived components too (PanelSectionHeader keeps
+// the AutoText default), so any of them showing controller data sets it.
 Panel {
   id: root
 
@@ -511,6 +513,7 @@ Panel {
         }
 
         PanelSectionHeader {
+          textFormat: Text.PlainText   // the site name is controller data
           width: parent.width
           text: root.site.name !== "" ? "UniFi · " + root.site.name : "UniFi"
         }
