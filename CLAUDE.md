@@ -6,8 +6,11 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
 ## Verifying changes
 
 - `test/lint` (qmllint), `test/test-normalize`, `test/test-fetch` (stub
-  controller, checks hostile ids), `test/test-manifest`, and
-  `omarchy-plugin-validate .`. `shellcheck` is not installed locally; CI runs it.
+  controller, checks hostile ids), `test/test-manifest`,
+  `omarchy-plugin-validate .`, and the shellcheck line from
+  `.github/workflows/ci.yml` (`shellcheck --severity=warning unifi-fetch
+  unifi-login lib/unifi-common.sh test/test-normalize test/test-manifest
+  test/test-fetch test/lint`). Run all of them before pushing.
 - The shell hot-reloads the plugin on file change, but not reliably for
   everything. For a trustworthy check run `omarchy-restart-shell`, wait ~7 s,
   then read `journalctl --user --since "30 sec ago" | grep -i unifi`.
