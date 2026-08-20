@@ -279,7 +279,7 @@ fi
 wans=null
 health=null
 if [[ -n $gateway_id ]]; then
-  unifi_http "/sites/$site_id/wans?limit=50" "$API_KEY"
+  unifi_http "/sites/$site_id/wans" "$API_KEY"
   if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
     wans=$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")
   fi
