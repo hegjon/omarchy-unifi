@@ -104,18 +104,22 @@ UNIFI_API_BASE="$(unifi_api_base_for "$url")"
 echo "Checking $UNIFI_API_BASE …"
 unifi_http "/sites" "$key"
 if reason=$(unifi_describe_http_failure); then
-  echo "Failed: $reason" >&2
+  # curl's own message can quote the server (a certificate name, say), so it
+  # is defanged like the labels before it reaches the terminal.
+  echo "Failed: ${reason//[[:cntrl:]]/ }" >&2
   exit 1
 fi
 
 # The site is picked from what the controller actually reports rather than
 # typed, so a name cannot be misspelt. Only the id is stored: a rename or
 # typo fix on the controller must keep polling the same site, and the fetch
-# looks the name up itself on its first poll. Newlines are squashed before
-# mapfile so a hostile name cannot shift one array against the other.
+# looks the name up itself on its first poll. The labels are printed to the
+# terminal, so every control and format character goes (Cc covers escape
+# sequences and newlines, Cf the invisible bidi overrides): a name must not
+# be able to recolour, retitle or shift one mapfile array against the other.
 site_rows=$(jq -r '.data[]? | select(.id != null)
   | [(.id | tostring), (.name // .internalReference // .id | tostring)]
-  | map(gsub("[\\r\\n\\t]"; " ") | .[0:120]) | @tsv' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
+  | map(gsub("[\\p{Cc}\\p{Cf}]"; " ") | .[0:120]) | @tsv' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
 mapfile -t site_ids < <(cut -f1 <<<"$site_rows")
 mapfile -t site_labels < <(cut -f2 <<<"$site_rows")
 if [[ -z $site_rows ]]; then

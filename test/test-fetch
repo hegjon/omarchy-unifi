@@ -22,12 +22,15 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"; [[ -n ${stub_pid:-} ]] && kill "$stub_pid" 2>/dev/null' EXIT
 
 # A shim secret-tool: the real one talks to the keyring, which CI has not.
+# Storing and clearing succeed silently so unifi-login can run through.
+# A no-op omarchy-shell keeps the login from poking a real widget.
 mkdir -p "$work/bin"
 cat >"$work/bin/secret-tool" <<'SHIM'
 #!/bin/sh
-[ "$1" = lookup ] && printf 'test-key'
+case "$1" in lookup) printf 'test-key' ;; esac
 SHIM
-chmod +x "$work/bin/secret-tool"
+printf '#!/bin/sh\nexit 0\n' >"$work/bin/omarchy-shell"
+chmod +x "$work/bin/secret-tool" "$work/bin/omarchy-shell"
 export PATH="$work/bin:$PATH"
 
 # Everything the scripts would touch on the machine is redirected here.
@@ -263,6 +266,21 @@ if jq -e '.error | test("larger than")' >/dev/null 2>&1 <<<"$out"; then
   ok "gives up on a response body over the size limit"
 else
   fail "gives up on a response body over the size limit" "${out:0:300}"
+fi
+stop_stub
+
+# unifi-login prints controller-chosen site labels to the terminal, so a
+# name carrying escape sequences must come out defanged. The setup answers
+# are fed on stdin: the stub's URL, the TLS default, and an empty key to
+# keep the one the shim "stored".
+evil_label=$'Evil\e]0;pwned\a\e[31m site\x01'
+start_stub "$(jq -cn --arg n "$evil_label" '[{id: "site-1", name: $n, internalReference: "default"}]')"
+out=$(printf 'http://127.0.0.1:%s/integration/v1\n\n\n' "$port" | "$PLUGIN_DIR/unifi-login" 2>&1)
+if grep -q '^Site: Evil' <<<"$out" && grep -q 'Signed in' <<<"$out" \
+   && ! (printf '%s' "$out" | tr -d '\n' | grep -q '[[:cntrl:]]'); then
+  ok "strips control characters from site labels before printing them"
+else
+  fail "strips control characters from site labels before printing them" "$(printf '%s' "$out" | od -c | head -20)"
 fi
 stop_stub
 
