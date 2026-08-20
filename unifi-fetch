@@ -17,10 +17,9 @@ set -uo pipefail
 umask 077
 
 readonly PAGE_LIMIT=200
-# Pages are followed while the controller keeps reporting more, so a
-# controller that always claims more would keep the loop going. No site
-# has anywhere near this many devices or clients.
-readonly MAX_PAGES=50
+# Pages per list: a backstop against a controller that keeps paging while
+# claiming a total the pages never reach.
+readonly MAX_PAGES=5
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
@@ -59,9 +58,16 @@ fetch_all() { # path
       die "The controller returned a malformed response for $1"
     items=$(jq -c '.data | length' <<<"$UNIFI_HTTP_BODY")
     total=$(jq -r '.totalCount // 0' <<<"$UNIFI_HTTP_BODY")
-    all=$(jq -c --argjson page "$(jq -c '.data' <<<"$UNIFI_HTTP_BODY")" '. + $page' <<<"$all")
-    (( offset += items ))
     [[ $total =~ ^[0-9]+$ ]] || total=0
+    # Both inputs reach jq on stdin: spliced into argv, a page would be
+    # capped by the kernel's argument-size limit instead of by us, and the
+    # merge would fail confusingly on any page past ~128 KB.
+    all=$(printf '%s\n%s\n' "$all" "$UNIFI_HTTP_BODY" | jq -c '. + input.data')
+    # Pages within the limit must not add up past it: the accumulated array
+    # obeys the same budget as a single response.
+    (( ${#all} <= UNIFI_MAX_BODY_BYTES )) ||
+      die "The controller sent more than $(( UNIFI_MAX_BODY_BYTES / 1024 / 1024 )) MB of $1"
+    (( offset += items ))
     (( items > 0 && offset < total )) || break
   done
   FETCHED="$all"

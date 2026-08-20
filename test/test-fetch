@@ -71,6 +71,11 @@ class H(BaseHTTPRequestHandler):
                 if mode == "endless":
                     # Always one more page than has been fetched.
                     return self._send(200, {"data": items, "totalCount": 10**9})
+                if mode == "bulky" and kind == "devices":
+                    # Each page stays under the per-response limit; two of
+                    # them together do not.
+                    fat = [dict(items[0], pad="x" * 15000) for _ in range(40)]
+                    return self._send(200, {"data": fat, "totalCount": 200})
                 if mode == "huge" and kind == "devices":
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
@@ -172,10 +177,20 @@ good_sites=$(jq -c '[.site]' "$TEST_DIR/fixtures/network.json")
 start_stub "$good_sites" endless
 out=$(timeout 60 "$PLUGIN_DIR/unifi-fetch")
 if jq -e '.error | test("without end")' >/dev/null 2>&1 <<<"$out" \
-   && (( $(grep -c devices "$work/requests") <= 50 )); then
+   && (( $(grep -c devices "$work/requests") <= 5 )); then
   ok "stops following pages after a bounded number"
 else
   fail "stops following pages after a bounded number" "$out ($(grep -c devices "$work/requests") device requests)"
+fi
+stop_stub
+
+# Pages that each fit the per-response limit must not add up past it.
+start_stub "$good_sites" bulky
+out=$(timeout 60 "$PLUGIN_DIR/unifi-fetch")
+if jq -e '.error | test("MB of")' >/dev/null 2>&1 <<<"$out"; then
+  ok "stops accumulating pages at the byte budget"
+else
+  fail "stops accumulating pages at the byte budget" "${out:0:300}"
 fi
 stop_stub
 

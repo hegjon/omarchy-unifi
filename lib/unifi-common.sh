@@ -97,10 +97,13 @@ unifi_is_token() { # value
   [[ ${#1} -le 128 && $1 =~ ^[A-Za-z0-9_-]+$ ]]
 }
 
-# The largest response we are prepared to hold: a body is read whole into a
+# The largest JSON we are prepared to hold: a body is read whole into a
 # shell variable and pushed through jq, so a controller must not be able to
-# make the shell swallow gigabytes. A page of 200 devices is well under 1 MB.
-readonly UNIFI_MAX_BODY_BYTES=$(( 16 * 1024 * 1024 ))
+# make the shell swallow gigabytes. Everything fetched is small — a page of
+# 200 devices is well under 1 MB, the WAN report a few hundred rows — and
+# fetch_all keeps its accumulated pages inside this same budget, so it bounds
+# the whole fetch, not just one response.
+readonly UNIFI_MAX_BODY_BYTES=$(( 1024 * 1024 ))
 
 # The curl config is line-oriented and its url is a quoted string, so a
 # newline, quote or backslash in any spliced value could turn data into a
