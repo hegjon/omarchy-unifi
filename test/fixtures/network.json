@@ -1,17 +1,99 @@
 {
-  "site": {"id": "88f7af54-98f8-306a-a1c7-c9349722b1f6", "internalReference": "default", "name": "Default"},
+  "site": {
+    "id": "88f7af54-98f8-306a-a1c7-c9349722b1f6",
+    "internalReference": "default",
+    "name": "Default"
+  },
   "devices": [
-    {"id": "d1", "name": "Office Switch", "model": "USW-Lite-8-PoE", "macAddress": "aa:bb:cc:00:00:01", "ipAddress": "192.168.1.3", "state": "ONLINE", "features": ["switching"], "interfaces": ["ports"], "firmwareVersion": "7.0.50", "firmwareUpdatable": false},
-    {"id": "d2", "name": "Living Room AP", "model": "U6-Lite", "macAddress": "aa:bb:cc:00:00:02", "ipAddress": "192.168.1.4", "state": "ONLINE", "features": ["accessPoint"], "interfaces": ["radios"], "firmwareVersion": "6.6.77", "firmwareUpdatable": true},
-    {"id": "d3", "name": "Garage AP", "model": "U6-Mesh", "macAddress": "aa:bb:cc:00:00:03", "ipAddress": "192.168.1.5", "state": "OFFLINE", "features": ["accessPoint"], "interfaces": ["radios"], "firmwareVersion": "6.6.77", "firmwareUpdatable": false},
-    {"id": "d4", "name": "Gateway", "model": "UCG-Ultra", "macAddress": "aa:bb:cc:00:00:04", "ipAddress": "192.168.1.1", "state": "ONLINE", "features": ["switching"], "interfaces": ["ports"], "firmwareVersion": "4.1.13", "firmwareUpdatable": false},
-    {"id": "d5", "model": "USW-Flex-Mini", "macAddress": "aa:bb:cc:00:00:05", "state": "CONNECTION_INTERRUPTED", "features": ["switching"], "interfaces": ["ports"]}
+    {
+      "id": "d1",
+      "name": "Office Switch",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:00:01",
+      "ipAddress": "192.168.1.3",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "interfaces": [
+        "ports"
+      ],
+      "firmwareVersion": "7.0.50",
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "d2",
+      "name": "Living Room AP",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:02",
+      "ipAddress": "192.168.1.4",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "interfaces": [
+        "radios"
+      ],
+      "firmwareVersion": "6.6.77",
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "d3",
+      "name": "Garage AP",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:03",
+      "ipAddress": "192.168.1.5",
+      "state": "OFFLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "interfaces": [
+        "radios"
+      ],
+      "firmwareVersion": "6.6.77",
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "d4",
+      "name": "Gateway",
+      "model": "UCG-Ultra",
+      "macAddress": "aa:bb:cc:00:00:04",
+      "ipAddress": "192.168.1.1",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "interfaces": [
+        "ports"
+      ],
+      "firmwareVersion": "4.1.13",
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "d5",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:00:05",
+      "state": "CONNECTION_INTERRUPTED",
+      "features": [
+        "switching"
+      ],
+      "interfaces": [
+        "ports"
+      ]
+    }
   ],
-  "clients": [
-    {"id": "c1", "name": "laptop", "type": "WIRELESS", "ipAddress": "192.168.1.20", "macAddress": "11:22:33:00:00:01", "uplinkDeviceId": "d2"},
-    {"id": "c2", "name": "phone", "type": "WIRELESS", "ipAddress": "192.168.1.21", "macAddress": "11:22:33:00:00:02", "uplinkDeviceId": "d2"},
-    {"id": "c3", "name": "printer", "type": "WIRED", "ipAddress": "192.168.1.22", "macAddress": "11:22:33:00:00:03", "uplinkDeviceId": "d1"},
-    {"id": "c4", "name": "nas", "type": "WIRED", "ipAddress": "192.168.1.23", "macAddress": "11:22:33:00:00:04", "uplinkDeviceId": "d4"},
-    {"id": "c5", "name": "vpn-user", "type": "VPN", "ipAddress": "10.8.0.2"}
+  "health": [
+    {
+      "subsystem": "wlan",
+      "num_user": 2,
+      "num_guest": 0,
+      "num_iot": 0
+    },
+    {
+      "subsystem": "lan",
+      "num_user": 2,
+      "num_guest": 0,
+      "num_iot": 0
+    }
   ]
 }

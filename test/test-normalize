@@ -49,9 +49,11 @@ check "counts online devices" network.json '.summary.online == 3'
 check "counts OFFLINE and CONNECTION_INTERRUPTED as offline" network.json '.summary.offline == 2'
 check "counts devices with a firmware update" network.json '.summary.updatable == 1'
 
-check "counts all clients, whatever their type" network.json '.summary.clients == 5'
-check "splits wired and wireless clients" network.json '.summary.wired == 2 and .summary.wireless == 2'
-check "counts VPN clients separately" network.json '.summary.vpn == 1'
+# Client counts come from the classic health rows — the client list itself
+# is never fetched.
+check "counts clients from the health rows" network.json '.summary.clients == 4'
+check "splits wired and wireless from the health rows" network.json \
+  '.summary.wired == 2 and .summary.wireless == 2'
 # A device the API flags as a gateway is one, whatever its model says.
 if jq -f "$NORMALIZE" <<<'{"devices":[{"id":"g","name":"Box","model":"Custom","state":"ONLINE","features":["gateway","switching"]}]}' |
    jq -e '.devices[0].kind == "gateway"' >/dev/null 2>&1; then
@@ -61,10 +63,6 @@ else
   printf '  FAIL  the gateway feature marks a gateway\n'
   (( failed++ ))
 fi
-check "attributes clients to their uplink device" network.json \
-  '(first(.devices[] | select(.name == "Living Room AP")) | .clients == 2)'
-check "a device with no clients reads zero, not null" network.json \
-  '(first(.devices[] | select(.name == "Garage AP")) | .clients == 0)'
 
 check "classifies access points" network.json \
   '(first(.devices[] | select(.name == "Living Room AP")) | .kind == "ap")'
@@ -168,7 +166,7 @@ fi
 
 echo
 echo "WAN state"
-check "no health report means no WAN block" network.json '.gateway.wan == null'
+check "no wan subsystem row means no WAN block" network.json '.gateway.wan == null'
 with_wan=$(jq --slurpfile h "$TEST_DIR/fixtures/health.json" --slurpfile w "$TEST_DIR/fixtures/wans.json" \
   '. + {health: $h[0], wans: $w[0]}' "$TEST_DIR/fixtures/network.json" | jq -f "$NORMALIZE" 2>&1)
 wan_check() { # name filter

@@ -58,6 +58,11 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   Any failure leaves `gateway.history` null and the widget graphs its own
   heartbeat samples instead — never let it become fatal.
 
+- Client counts come solely from the classic stat/health rows (wlan and lan
+  `num_user + num_guest + num_iot`; no VPN figure exists there). The
+  Integration `/clients` endpoint is never called — the widget shows no
+  per-device client counts for the same reason.
+
 - WAN state comes from classic `…/api/s/<site>/stat/health` (GET, same key):
   the `wan` subsystem row has `status, wan_ip, gateways[], isp_name, asn,
   uptime_stats{WAN, WAN2, …}` (availability, latency_average, uptime or

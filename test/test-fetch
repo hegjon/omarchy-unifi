@@ -65,27 +65,30 @@ class H(BaseHTTPRequestHandler):
         p = self.path.split("?")[0]
         if p.endswith("/sites"):
             return self._send(200, {"data": sites, "totalCount": len(sites)})
-        for kind in ("devices", "clients"):
-            if p.endswith("/" + kind):
-                items = fixture[kind]
-                if mode == "endless":
-                    # Always one more page than has been fetched.
-                    return self._send(200, {"data": items, "totalCount": 10**9})
-                if mode == "bulky" and kind == "devices":
-                    # Each page stays under the per-response limit; two of
-                    # them together do not.
-                    fat = [dict(items[0], pad="x" * 15000) for _ in range(40)]
-                    return self._send(200, {"data": fat, "totalCount": 200})
-                if mode == "huge" and kind == "devices":
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json")
-                    self.end_headers()
-                    self.wfile.write(b'{"data":[')
-                    for _ in range(40 * 1024):   # ~40 MB of one repeated device
-                        self.wfile.write((json.dumps(items[0]) + ",").ljust(1024).encode())
-                    self.wfile.write(json.dumps(items[0]).encode() + b'],"totalCount":1}')
-                    return
-                return self._send(200, {"data": items, "totalCount": len(items)})
+        if p.endswith("/stat/health"):
+            return self._send(200, {"data": [
+                {"subsystem": "wlan", "num_user": 9, "num_guest": 0, "num_iot": 1},
+                {"subsystem": "lan", "num_user": 5, "num_guest": 0, "num_iot": 0}]})
+        if p.endswith("/devices"):
+            items = fixture["devices"]
+            if mode == "endless":
+                # Always one more page than has been fetched.
+                return self._send(200, {"data": items, "totalCount": 10**9})
+            if mode == "bulky":
+                # Each page stays under the per-response limit; two of
+                # them together do not.
+                fat = [dict(items[0], pad="x" * 15000) for _ in range(40)]
+                return self._send(200, {"data": fat, "totalCount": 200})
+            if mode == "huge":
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"data":[')
+                for _ in range(40 * 1024):   # ~40 MB of one repeated device
+                    self.wfile.write((json.dumps(items[0]) + ",").ljust(1024).encode())
+                self.wfile.write(json.dumps(items[0]).encode() + b'],"totalCount":1}')
+                return
+            return self._send(200, {"data": items, "totalCount": len(items)})
         self._send(404, {"error": "unknown"})
     def do_POST(self):
         log.write("POST " + self.path + "\n"); log.flush()
@@ -139,7 +142,8 @@ out2=$("$PLUGIN_DIR/unifi-fetch" \
 if jq -e '.error == null and (.site.name | length > 0) and .site.ref == "default"' >/dev/null 2>&1 <<<"$out" \
    && jq -e '.error == null and .site.ref == "default" and .site.name == ""
              and .summary.devices == 5' >/dev/null 2>&1 <<<"$out2" \
-   && (( $(grep -cF 'sites?' "$work/requests") == 1 )); then
+   && (( $(grep -cF 'sites?' "$work/requests") == 1 )) \
+   && ! grep -q clients "$work/requests"; then
   ok "renders the fixture; a poll handed the site skips the lookup"
 else
   fail "renders the fixture; a poll handed the site skips the lookup" "$out ($(grep -cF 'sites?' "$work/requests") site list requests)"

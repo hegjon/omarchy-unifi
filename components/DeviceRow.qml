@@ -5,8 +5,8 @@ import qs.Commons
 import qs.Ui
 
 // One UniFi device in the list: role glyph, name and state, model and address,
-// and how many clients hang off it. The gateway additionally carries its
-// statistics block underneath.
+// and a firmware notice when an update waits. The gateway additionally
+// carries its statistics block underneath.
 //
 // `host` is the widget root, which owns the formatting helpers and the theme
 // colours; the row itself keeps no state beyond what it is given.
@@ -91,9 +91,7 @@ Column {
 
           textFormat: Text.PlainText
           id: clientText
-          text: row.device.online && row.device.kind !== "gateway"
-            ? row.device.clients + (row.device.clients === 1 ? " client" : " clients")
-            : (row.device.firmwareUpdatable ? "Update available" : "")
+          text: row.device.firmwareUpdatable ? "Update available" : ""
           color: row.host.detailColor
           font.family: Style.font.family
           font.pixelSize: Style.font.caption

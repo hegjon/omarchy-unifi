@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Fetch devices and clients for the configured site from a UniFi Network
-# controller and print the flat model the widget renders. unifi-login stores
-# which site by id; the name and classic-API reference come from /sites.
+# Fetch the configured site's devices from a UniFi Network controller and
+# print the flat model the widget renders. Client counts come from the
+# classic health report, so the client list is never requested. unifi-login
+# stores which site by id; the name and classic-API reference come from
+# /sites.
 #
 # Usage: unifi-fetch [--site=<id> --site-ref=<reference>]
 #
@@ -139,11 +141,9 @@ fi
 
 fetch_all "/sites/$site_id/devices"
 devices="$FETCHED"
-fetch_all "/sites/$site_id/clients"
-clients="$FETCHED"
 
-raw=$(jq -n --argjson site "$site" --argjson devices "$devices" --argjson clients "$clients" \
-  '{site: $site, devices: $devices, clients: $clients}')
+raw=$(jq -n --argjson site "$site" --argjson devices "$devices" \
+  '{site: $site, devices: $devices}')
 
 # The gateway's own statistics (WAN rates, load, uptime) are one more request,
 # for one device only, and are worth it: they are what the panel graphs. The

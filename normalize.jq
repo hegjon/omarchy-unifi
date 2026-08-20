@@ -128,12 +128,28 @@ def wan_state:
       end
   end;
 
+# Client counts, taken from the classic health rows the fetch already has —
+# the client list itself is never requested. wlan and lan each count users,
+# guests and IoT; their sum is shown as the total so the line always adds up
+# (the controller's own num_sta can differ by its own accounting). The rows
+# carry no VPN figure. Null when the health report is missing or countless.
+def health_clients:
+  if (.health // null) == null then null else
+    ((.health // []) | map(select(.subsystem == "wlan")) | .[0] // null) as $wlan
+    | ((.health // []) | map(select(.subsystem == "lan")) | .[0] // null) as $lan
+    | (if $wlan == null then null
+       else (as_number($wlan.num_user) // 0) + (as_number($wlan.num_guest) // 0)
+            + (as_number($wlan.num_iot) // 0) end) as $wireless
+    | (if $lan == null then null
+       else (as_number($lan.num_user) // 0) + (as_number($lan.num_guest) // 0)
+            + (as_number($lan.num_iot) // 0) end) as $wired
+    | if $wireless == null and $wired == null then null
+      else {clients: (($wireless // 0) + ($wired // 0)), wireless: $wireless, wired: $wired} end
+  end;
+
 (.site // {}) as $site
 | gateway_stats as $stats
 | wan_state as $wan
-| (.clients // []) as $clients
-| ($clients | map(select(.uplinkDeviceId != null)) | group_by(.uplinkDeviceId)
-   | map({key: .[0].uplinkDeviceId, value: length}) | from_entries) as $clients_by_device
 | ((.devices // []) | map(
     (.state // "OFFLINE" | tostring) as $state
     | {
@@ -147,11 +163,11 @@ def wan_state:
         online: (($state | bucket) == "online"),
         features: (.features // []),
         kind: kind,
-        clients: ($clients_by_device[.id // ""] // 0),
         firmwareUpdatable: (.firmwareUpdatable // false)
       }
   ) | sort_by(sort_key)) as $devices
 | ($devices | map(select(.kind == "gateway")) | .[0] // null) as $gateway
+| (health_clients // {clients: null, wireless: null, wired: null}) as $hc
 | {
     # ref is the classic-API reference as vetted by the fetch; the widget
     # hands it back on the next poll so the site lookup runs only once.
@@ -168,11 +184,8 @@ def wan_state:
       offline: ($devices | map(select(.bucket == "offline")) | length),
       busy: ($devices | map(select(.bucket == "busy")) | length),
       updatable: ($devices | map(select(.firmwareUpdatable)) | length),
-      clients: ($clients | length),
-      wired: ($clients | map(select(.type == "WIRED")) | length),
-      wireless: ($clients | map(select(.type == "WIRELESS")) | length),
-      # Teleport is Ubiquiti's own VPN, so it counts with VPN rather than as
-      # a fourth kind nobody would look for.
-      vpn: ($clients | map(select(.type == "VPN" or .type == "TELEPORT")) | length)
+      clients: $hc.clients,
+      wired: $hc.wired,
+      wireless: $hc.wireless
     }
   }

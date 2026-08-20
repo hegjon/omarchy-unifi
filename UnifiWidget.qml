@@ -44,7 +44,7 @@ Panel {
   // gateway block, headers and footer leave over, so the panel never grows
   // past this and the gateway is never pushed out of view.
   readonly property real panelMaxHeight: Style.space(760)
-  property var summary: ({ devices: 0, online: 0, offline: 0, busy: 0, updatable: 0, clients: 0, wired: 0, wireless: 0, vpn: 0 })
+  property var summary: ({ devices: 0, online: 0, offline: 0, busy: 0, updatable: 0, clients: null, wired: null, wireless: null })
   property string lastError: ""
   property bool needsLogin: false
   property bool initialized: false
@@ -165,6 +165,10 @@ Panel {
   readonly property string barSummary: {
     if (!showBarClients || !initialized) return ""
     if (lastError !== "" || dataIsStale) return ""
+    // The client count is health-derived and can be missing (no gateway, or
+    // the report failed); the device count stands in whenever it is.
+    if (summary.clients === null || summary.clients === undefined)
+      return String(summary.devices)
     return String(summary.clients)
   }
 
@@ -177,7 +181,8 @@ Panel {
     var parts = []
     if (summary.offline > 0) parts.push(summary.offline + " offline")
     parts.push(summary.online + "/" + summary.devices + " devices online")
-    parts.push(summary.clients + " clients")
+    if (summary.clients !== null && summary.clients !== undefined)
+      parts.push(summary.clients + " clients")
     return parts.join(" · ")
   }
 
@@ -602,15 +607,23 @@ Panel {
           font.pixelSize: Style.font.body
         }
 
-        // Client summary
+        // Client summary. The counts come from the controller's health
+        // report — the client list is never fetched — and when the report
+        // is missing they are null and the line disappears rather than
+        // showing them.
         Text {
           textFormat: Text.PlainText
           width: parent.width
           visible: root.initialized && !root.needsLogin && root.lastError === ""
-          text: root.summary.clients + " clients"
-            + "  ·  " + root.summary.wireless + " wireless"
-            + "  ·  " + root.summary.wired + " wired"
-            + (root.summary.vpn > 0 ? "  ·  " + root.summary.vpn + " VPN" : "")
+            && root.summary.clients !== null && root.summary.clients !== undefined
+          text: {
+            var parts = [root.summary.clients + " clients"]
+            if (root.summary.wireless !== null && root.summary.wireless !== undefined)
+              parts.push(root.summary.wireless + " wireless")
+            if (root.summary.wired !== null && root.summary.wired !== undefined)
+              parts.push(root.summary.wired + " wired")
+            return parts.join("  ·  ")
+          }
           color: root.detailColor
           font.family: Style.font.family
           font.pixelSize: Style.font.caption
