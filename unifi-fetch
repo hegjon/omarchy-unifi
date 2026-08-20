@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# Fetch sites, devices and clients from a UniFi Network controller and print
-# the flat model the widget renders.
+# Fetch devices and clients for the configured site from a UniFi Network
+# controller and print the flat model the widget renders. unifi-login stores
+# which site by id; the name and classic-API reference come from /sites.
 #
-# Usage: unifi-fetch
+# Usage: unifi-fetch [--site=<id> --site-ref=<reference>]
+#
+# The widget hands back the site it learned from an earlier poll, so only
+# the first poll after a (re)start — or any run without the flags — asks
+# the controller for the site. The pair counts only when the id matches the
+# configured site: after unifi-login switches sites, the stale reference is
+# ignored and the lookup runs again.
 #
 # Prints the normalized document on success, or {"error":"…"} on failure —
 # exiting 0 either way so the widget can render the reason instead of guessing
@@ -33,6 +40,16 @@ source "$SCRIPT_DIR/lib/unifi-common.sh" || {
 
 unifi_require_commands
 [[ -r $NORMALIZE ]] || die "normalize.jq is missing from the plugin folder"
+
+KNOWN_SITE=""
+KNOWN_REF=""
+for arg in "$@"; do
+  case "$arg" in
+    --site=*) KNOWN_SITE="${arg#--site=}" ;;
+    --site-ref=*) KNOWN_REF="${arg#--site-ref=}" ;;
+    *) die "unifi-fetch takes only --site=<id> and --site-ref=<reference>" ;;
+  esac
+done
 
 unifi_load_config || die_needs_login "No UniFi controller configured"
 API_KEY="$(unifi_api_key)"
@@ -73,25 +90,52 @@ fetch_all() { # path
   FETCHED="$all"
 }
 
-fetch_all "/sites"
-sites="$FETCHED"
+# The config pins the site by id — a rename or typo fix on the controller
+# must keep polling the same site. The id names URL paths and cache files
+# from here on, so it has to be a plain token (see unifi_is_token).
+site_id="$UNIFI_SITE"
+unifi_is_token "$site_id" ||
+  die_needs_login "No usable site id is stored — run unifi-login again"
 
-# The site is chosen by name (the "default" site is called Default in the UI)
-# or by id; with nothing configured the first one is used, which is the only
-# one on a typical home console.
-site=$(jq -c --arg want "$UNIFI_SITE" '
-  if length == 0 then null
-  elif $want == "" then .[0]
-  else (map(select(.id == $want or .name == $want or .internalReference == $want)) | .[0]) // null
-  end' <<<"$sites")
-[[ $site != null ]] || {
-  if [[ -n $UNIFI_SITE ]]; then die "No site named \"$UNIFI_SITE\" on this controller"
-  else die "The controller has no sites"; fi
-}
-site_id=$(jq -r '.id // empty' <<<"$site")
-# The id names URL paths and the report cache file from here on, so it has
-# to be a plain token; see unifi_is_token.
-unifi_is_token "$site_id" || die "The controller returned an unusable site id"
+# The widget remembers the site between polls and hands it back on argv, so
+# the controller is only asked when nothing usable was passed. An empty
+# reference passed with the right id is itself an answer ("this site has
+# none") and does not trigger a lookup — it only costs the WAN details.
+site=""
+if [[ -n $KNOWN_SITE && $KNOWN_SITE == "$site_id" ]]; then
+  ref="$KNOWN_REF"
+  unifi_is_token "$ref" || ref=""
+  site=$(jq -cn --arg id "$site_id" --arg ref "$ref" \
+    '{id: $id, name: "", internalReference: (if $ref == "" then null else $ref end)}')
+fi
+if [[ -z $site ]]; then
+  # One filtered row is all that is needed. The id goes into the filter as a
+  # bare UUID — quoted, the filter language types it STRING and mismatches.
+  # The row's id is checked rather than trusted to have been filtered, and a
+  # controller that cannot answer this (filtering postdates Network 9.0)
+  # gets the plain list walk instead.
+  unifi_http "/sites?filter=id.eq($site_id)&limit=1" "$API_KEY"
+  [[ $UNIFI_HTTP_CODE == 200 ]] &&
+    site=$(jq -c --arg id "$site_id" \
+      '.data[0]? // empty | select(type == "object" and .id == $id)' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
+  if [[ -z $site ]]; then
+    # No filter support: one plain page at the API's default limit (25) is
+    # plenty — a controller with more sites than that also has filtering.
+    unifi_http "/sites" "$API_KEY"
+    if reason=$(unifi_describe_http_failure); then
+      case "$UNIFI_HTTP_CODE" in
+        401|403) die_needs_login "$reason" ;;
+        *) die "$reason" ;;
+      esac
+    fi
+    jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY" ||
+      die "The controller returned a malformed response for /sites"
+    site=$(jq -c --arg id "$site_id" \
+      '.data | map(select(.id == $id)) | .[0] // empty' <<<"$UNIFI_HTTP_BODY")
+    [[ -n $site ]] ||
+      die_needs_login "The stored site is gone from this controller — run unifi-login again"
+  fi
+fi
 
 fetch_all "/sites/$site_id/devices"
 devices="$FETCHED"
@@ -175,6 +219,10 @@ fi
 
 unset API_KEY
 
+# $site_name is the token-checked reference (empty when unusable): what the
+# widget gets to hand back on the next poll's argv is only ever that, never
+# the controller's raw string.
 jq --argjson stats "$stats" --argjson report "$report" --argjson wans "$wans" --argjson health "$health" \
-  '. + {stats: $stats, report: $report, wans: $wans, health: $health}' <<<"$raw" |
+  --arg siteRef "$site_name" \
+  '. + {stats: $stats, report: $report, wans: $wans, health: $health, siteRef: $siteRef}' <<<"$raw" |
   jq -f "$NORMALIZE" 2>/dev/null || die "Could not interpret the controller response"

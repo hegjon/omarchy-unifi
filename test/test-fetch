@@ -112,8 +112,11 @@ start_stub() { # sites-json [mode]
   done
   port=$(cat "$work/port")
   mkdir -p "$XDG_STATE_HOME/omarchy/unifi"
-  printf 'url=http://127.0.0.1:%s/integration/v1\nsite=\ninsecure=0\n' "$port" \
-    >"$XDG_STATE_HOME/omarchy/unifi/config"
+  # The config holds the first site's id, as unifi-login would have stored
+  # it — written raw, so a hostile id lands in it the way a lying controller
+  # would have planted it at setup.
+  printf 'url=http://127.0.0.1:%s/integration/v1\nsite=%s\ninsecure=0\n' \
+    "$port" "$(jq -r '.[0].id // ""' <<<"$1")" >"$XDG_STATE_HOME/omarchy/unifi/config"
 }
 
 stop_stub() {
@@ -126,18 +129,26 @@ stop_stub() {
 echo "unifi-fetch against a stub controller:"
 
 # A well-behaved controller: the fixture's site comes through and the
-# report cache lands under the site's own id.
+# report cache lands under the site's own id. A first poll resolves the
+# site; a second poll given that answer back — as the widget does — must
+# not query the site list again.
 start_stub "$(jq -c '[.site]' "$TEST_DIR/fixtures/network.json")"
 out=$("$PLUGIN_DIR/unifi-fetch")
-if jq -e '.error == null and (.site.name | length > 0)' >/dev/null 2>&1 <<<"$out"; then
-  ok "renders the fixture through a stub controller"
+out2=$("$PLUGIN_DIR/unifi-fetch" \
+  "--site=$(jq -r '.site.id' <<<"$out")" "--site-ref=$(jq -r '.site.ref' <<<"$out")")
+if jq -e '.error == null and (.site.name | length > 0) and .site.ref == "default"' >/dev/null 2>&1 <<<"$out" \
+   && jq -e '.error == null and .site.ref == "default" and .site.name == ""
+             and .summary.devices == 5' >/dev/null 2>&1 <<<"$out2" \
+   && (( $(grep -cF 'sites?' "$work/requests") == 1 )); then
+  ok "renders the fixture; a poll handed the site skips the lookup"
 else
-  fail "renders the fixture through a stub controller" "$out"
+  fail "renders the fixture; a poll handed the site skips the lookup" "$out ($(grep -cF 'sites?' "$work/requests") site list requests)"
 fi
 stop_stub
 
-# A site id that tries to escape the cache directory and to append curl
-# directives. The fetch must give up on the site rather than use it.
+# A stored site id that tries to escape the cache directory and to append
+# curl directives — what a lying controller could have planted at setup.
+# The fetch must give up on the site rather than use it.
 evil_id=$'../../home/escaped"\noutput = '"$HOME/pwned"$'\nurl = "http://127.0.0.1:1/'
 start_stub "$(jq -cn --arg id "$evil_id" '[{id: $id, name: "Default", internalReference: "default"}]')"
 out=$("$PLUGIN_DIR/unifi-fetch")

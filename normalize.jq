@@ -153,7 +153,10 @@ def wan_state:
   ) | sort_by(sort_key)) as $devices
 | ($devices | map(select(.kind == "gateway")) | .[0] // null) as $gateway
 | {
-    site: {id: ($site.id // ""), name: ($site.name // $site.internalReference // "")},
+    # ref is the classic-API reference as vetted by the fetch; the widget
+    # hands it back on the next poll so the site lookup runs only once.
+    site: {id: ($site.id // ""), name: ($site.name // $site.internalReference // ""),
+           ref: (.siteRef // "")},
     devices: $devices,
     # The first gateway is the one whose statistics are fetched and graphed.
     gateway: (if $gateway == null then null

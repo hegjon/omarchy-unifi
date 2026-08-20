@@ -34,6 +34,14 @@ check() {
 echo "normalize.jq"
 
 check "reads the site name" network.json '.site.name == "Default"'
+# siteRef is injected by the fetch after vetting; it rides back to the fetch
+# via the widget's --site-ref argument.
+if jq -f "$NORMALIZE" <<<'{"siteRef":"default"}' | jq -e '.site.ref == "default"' >/dev/null 2>&1 \
+   && jq -f "$NORMALIZE" <<<'{}' | jq -e '.site.ref == ""' >/dev/null 2>&1; then
+  printf '  ok    passes the vetted site reference through\n'; (( passed++ ))
+else
+  printf '  FAIL  passes the vetted site reference through\n'; (( failed++ ))
+fi
 check "counts every device" network.json '.summary.devices == 5'
 check "counts online devices" network.json '.summary.online == 3'
 # CONNECTION_INTERRUPTED means the controller cannot hear the device; for the

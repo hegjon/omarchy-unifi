@@ -35,7 +35,7 @@ show_status() {
   if unifi_load_config; then
     echo "Controller: $UNIFI_URL"
     echo "API base:   $UNIFI_API_BASE"
-    echo "Site:       ${UNIFI_SITE:-(first site)}"
+    echo "Site:       ${UNIFI_SITE:-not chosen — run unifi-login}"
     echo "TLS:        $([[ $UNIFI_INSECURE == 1 ]] && echo 'self-signed allowed' || echo 'verified')"
   else
     echo "Controller: not configured"
@@ -102,23 +102,29 @@ unset existing_key
 UNIFI_URL="$url"; UNIFI_INSECURE="$insecure"
 UNIFI_API_BASE="$(unifi_api_base_for "$url")"
 echo "Checking $UNIFI_API_BASE …"
-unifi_http "/sites?limit=200" "$key"
+unifi_http "/sites" "$key"
 if reason=$(unifi_describe_http_failure); then
   echo "Failed: $reason" >&2
   exit 1
 fi
 
 # The site is picked from what the controller actually reports rather than
-# typed, so a name cannot be misspelt. Stored by id: names can be renamed.
-mapfile -t site_ids < <(jq -r '.data[]? | .id // empty' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
-mapfile -t site_labels < <(jq -r '.data[]? | select(.id != null) | "\(.name // .internalReference // .id)"' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
-if (( ${#site_ids[@]} == 0 )); then
+# typed, so a name cannot be misspelt. Only the id is stored: a rename or
+# typo fix on the controller must keep polling the same site, and the fetch
+# looks the name up itself on its first poll. Newlines are squashed before
+# mapfile so a hostile name cannot shift one array against the other.
+site_rows=$(jq -r '.data[]? | select(.id != null)
+  | [(.id | tostring), (.name // .internalReference // .id | tostring)]
+  | map(gsub("[\\r\\n\\t]"; " ") | .[0:120]) | @tsv' <<<"$UNIFI_HTTP_BODY" 2>/dev/null)
+mapfile -t site_ids < <(cut -f1 <<<"$site_rows")
+mapfile -t site_labels < <(cut -f2 <<<"$site_rows")
+if [[ -z $site_rows ]]; then
   echo "The controller answered but listed no sites." >&2
   exit 1
 fi
 
 if (( ${#site_ids[@]} == 1 )); then
-  site="${site_ids[0]}"
+  chosen=0
   echo "Site: ${site_labels[0]}"
 else
   echo
@@ -140,9 +146,13 @@ else
     fi
     echo "Enter a number between 1 and ${#site_ids[@]}."
   done
-  site="${site_ids[$(( choice - 1 ))]}"
-  echo "Site: ${site_labels[$(( choice - 1 ))]}"
+  chosen=$(( choice - 1 ))
+  echo "Site: ${site_labels[$chosen]}"
 fi
+
+site="${site_ids[$chosen]}"
+# The id names URL paths in every later poll, so refuse anything else here.
+unifi_is_token "$site" || { echo "The controller returned an unusable site id." >&2; exit 1; }
 
 printf '%s' "$key" | unifi_store_api_key || { echo "Could not store the API key in the keyring." >&2; exit 1; }
 unset key

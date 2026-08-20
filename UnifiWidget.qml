@@ -29,7 +29,7 @@ Panel {
   // --- state ------------------------------------------------------------
 
   property var devices: []
-  property var site: ({ id: "", name: "" })
+  property var site: ({ id: "", name: "", ref: "" })
   property var gateway: null
 
   // WAN rate samples for the graph, oldest first: {t, rx, tx}. One entry per
@@ -211,7 +211,14 @@ Panel {
   function refresh() {
     if (fetchProcess.running) return
     refreshing = true
-    fetchProcess.command = [backendPath]
+    // Hand the site from the last poll back so the fetch skips its /sites
+    // lookup. The ref is the token the fetch itself vetted — a raw
+    // controller string never reaches argv — and the fetch re-checks both
+    // against its config before trusting them.
+    var cmd = [backendPath]
+    if (site && site.id)
+      cmd.push("--site=" + site.id, "--site-ref=" + (site.ref || ""))
+    fetchProcess.command = cmd
     fetchProcess.running = true
   }
 
@@ -237,7 +244,13 @@ Panel {
     lastError = ""
     needsLogin = false
     devices = (parsed && parsed.devices) ? parsed.devices : []
-    if (parsed && parsed.site) site = parsed.site
+    if (parsed && parsed.site) {
+      // A poll launched with --site-ref skipped the site lookup and reports
+      // an empty name; keep the one from the poll that resolved it.
+      if (parsed.site.name === "" && parsed.site.id === site.id && site.name)
+        parsed.site.name = site.name
+      site = parsed.site
+    }
     if (parsed && parsed.summary) summary = parsed.summary
     gateway = (parsed && parsed.gateway) ? parsed.gateway : null
     lastUpdatedAt = Date.now()

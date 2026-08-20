@@ -85,5 +85,17 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   `$(...)` would end only the subshell and its JSON would be captured as data.
 - The plugin id (`hegjon.unifi`) is also the keyring `application` attribute
   and the IPC target. Renaming it orphans the stored key.
+- unifi-login stores only the site id — deliberate: a rename or typo fix on
+  the controller must keep polling the same site. unifi-fetch resolves the
+  name and internalReference from /sites only when not told them: the widget
+  holds the last poll's site and hands it back as `--site=<id>
+  --site-ref=<ref>`, so the lookup runs once per widget lifetime. The pair
+  counts only when the id matches the config, the ref only if it is a plain
+  token, and the ref the widget passes is the one the fetch vetted
+  (`site.ref` in the output) — never the controller's raw string. There is
+  no `GET /sites/{id}`; the lookup is `/sites?filter=id.eq(<uuid>)&limit=1`
+  — the UUID goes **unquoted** (quoted means STRING and the filter wants
+  UUID; checked against Network 10.5.67), with one plain /sites page (the
+  API's default limit, 25) as fallback for controllers without filtering.
 - Style follows hegjon.prusa-connect: comments explain *why*; imperative
   commit subjects; version lives in `manifest.json`; annotated `vX.Y.Z` tags.

@@ -15,6 +15,9 @@ readonly UNIFI_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/unifi"
 readonly UNIFI_CONFIG_FILE="$UNIFI_STATE_DIR/config"
 
 # Set by unifi_load_config and read by the scripts that source this file.
+# The site is stored by id only: a rename or typo fix on the controller must
+# keep polling the same site. Its name and classic-API reference are looked
+# up by the fetch once per login session.
 # shellcheck disable=SC2034
 UNIFI_URL=""
 UNIFI_SITE=""
