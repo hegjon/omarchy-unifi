@@ -31,6 +31,21 @@ Panel {
   property var devices: []
   property var site: ({ id: "", name: "", ref: "" })
   property var gateway: null
+  // A site past the fetcher's device cap: `devices` holds at most the
+  // gateway and summary.devices is the controller's claim. controllerInfo
+  // carries the configured controller address ({url}).
+  property bool oversized: false
+  property var controllerInfo: null
+
+  // The controller's own device list, for the oversized view. UniFi OS
+  // consoles serve the Network app at /network/<site>/devices; without a
+  // site reference the console root still gets the user there.
+  readonly property string deviceListUrl: {
+    if (!controllerInfo || !controllerInfo.url) return ""
+    return site && site.ref
+      ? controllerInfo.url + "/network/" + site.ref + "/devices"
+      : controllerInfo.url
+  }
 
   // WAN rate samples for the graph, oldest first: {t, rx, tx}. One entry per
   // controller heartbeat, so consecutive polls that see the same heartbeat
@@ -167,7 +182,7 @@ Panel {
     if (lastError !== "" || dataIsStale) return ""
     // The client count is health-derived and can be missing (no gateway, or
     // the report failed); the device count stands in whenever it is.
-    if (summary.clients === null || summary.clients === undefined)
+    if (oversized || summary.clients === null || summary.clients === undefined)
       return String(summary.devices)
     return String(summary.clients)
   }
@@ -178,6 +193,12 @@ Panel {
       return "UniFi: last updated " + formatAgo(lastUpdatedAt / 1000)
     if (lastError !== "") return "UniFi: " + lastError
     if (!initialized) return "UniFi: loading…"
+    if (oversized) {
+      var head = summary.devices + " devices"
+      if (summary.clients !== null && summary.clients !== undefined)
+        head += " · " + summary.clients + " clients"
+      return head + " — full list in the UniFi web UI"
+    }
     var parts = []
     if (summary.offline > 0) parts.push(summary.offline + " offline")
     parts.push(summary.online + "/" + summary.devices + " devices online")
@@ -221,8 +242,12 @@ Panel {
     // controller string never reaches argv — and the fetch re-checks both
     // against its config before trusting them.
     var cmd = [backendPath]
-    if (site && site.id)
+    if (site && site.id) {
       cmd.push("--site=" + site.id, "--site-ref=" + (site.ref || ""))
+      // On an oversized site this lets the fetch get the gateway by id
+      // instead of hunting the device pages again.
+      if (gateway && gateway.id) cmd.push("--gateway=" + gateway.id)
+    }
     fetchProcess.command = cmd
     fetchProcess.running = true
   }
@@ -258,6 +283,8 @@ Panel {
     }
     if (parsed && parsed.summary) summary = parsed.summary
     gateway = (parsed && parsed.gateway) ? parsed.gateway : null
+    oversized = (parsed && parsed.oversized === true)
+    controllerInfo = (parsed && parsed.controller) ? parsed.controller : null
     lastUpdatedAt = Date.now()
     recordRates()
 
@@ -633,7 +660,8 @@ Panel {
 
           textFormat: Text.PlainText
           width: parent.width
-          visible: root.initialized && !root.needsLogin && root.lastError === "" && root.devices.length === 0
+          visible: root.initialized && !root.needsLogin && root.lastError === ""
+            && root.devices.length === 0 && !root.oversized
           text: "No devices on this site."
           color: root.detailColor
           font.family: Style.font.family
@@ -657,6 +685,32 @@ Panel {
             rateHistory: root.rateHistory
             rateReport: root.gateway ? (root.gateway.history || null) : null
             wanState: root.gateway ? (root.gateway.wan || null) : null
+          }
+        }
+
+        // Where the device list would scroll, a site past the cap gets the
+        // count and a door to the controller's own list instead.
+        Column {
+          width: parent.width
+          spacing: Style.space(8)
+          visible: root.initialized && !root.needsLogin && root.lastError === "" && root.oversized
+
+          Text {
+            textFormat: Text.PlainText
+            width: parent.width
+            wrapMode: Text.WordWrap
+            text: root.summary.devices + " devices — more than this widget lists."
+            color: Color.popups.text
+            font.family: Style.font.family
+            font.pixelSize: Style.font.body
+          }
+
+          Button {
+            text: "Open the device list"
+            bordered: true
+            fontSize: Style.font.caption
+            visible: root.deviceListUrl !== ""
+            onClicked: Qt.openUrlExternally(root.deviceListUrl)
           }
         }
 

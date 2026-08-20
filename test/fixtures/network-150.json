@@ -1,0 +1,1854 @@
+{
+  "site": {
+    "id": "demo-150",
+    "internalReference": "default",
+    "name": "Demo 150"
+  },
+  "devices": [
+    {
+      "id": "demo-gw",
+      "name": "Demo Gateway",
+      "model": "UCG-Ultra",
+      "macAddress": "f4:e2:c6:00:00:01",
+      "ipAddress": "203.0.113.10",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d2",
+      "name": "AP 002",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:02",
+      "ipAddress": "10.20.0.2",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d3",
+      "name": "AP 003",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:03",
+      "ipAddress": "10.20.0.3",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d4",
+      "name": "AP 004",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:04",
+      "ipAddress": "10.20.0.4",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d5",
+      "name": "AP 005",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:05",
+      "ipAddress": "10.20.0.5",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d6",
+      "name": "AP 006",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:06",
+      "ipAddress": "10.20.0.6",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d7",
+      "name": "AP 007",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:07",
+      "ipAddress": "10.20.0.7",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d8",
+      "name": "AP 008",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:08",
+      "ipAddress": "10.20.0.8",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d9",
+      "name": "AP 009",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:09",
+      "ipAddress": "10.20.0.9",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d10",
+      "name": "AP 010",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:10",
+      "ipAddress": "10.20.0.10",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d11",
+      "name": "AP 011",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:11",
+      "ipAddress": "10.20.0.11",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d12",
+      "name": "AP 012",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:12",
+      "ipAddress": "10.20.0.12",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d13",
+      "name": "AP 013",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:13",
+      "ipAddress": "10.20.0.13",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d14",
+      "name": "AP 014",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:14",
+      "ipAddress": "10.20.0.14",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d15",
+      "name": "AP 015",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:15",
+      "ipAddress": "10.20.0.15",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d16",
+      "name": "AP 016",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:16",
+      "ipAddress": "10.20.0.16",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d17",
+      "name": "AP 017",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:17",
+      "ipAddress": "10.20.0.17",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d18",
+      "name": "AP 018",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:18",
+      "ipAddress": "10.20.0.18",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d19",
+      "name": "AP 019",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:19",
+      "ipAddress": "10.20.0.19",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d20",
+      "name": "AP 020",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:20",
+      "ipAddress": "10.20.0.20",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d21",
+      "name": "AP 021",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:21",
+      "ipAddress": "10.20.0.21",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d22",
+      "name": "AP 022",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:22",
+      "ipAddress": "10.20.0.22",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d23",
+      "name": "AP 023",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:23",
+      "ipAddress": "10.20.0.23",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d24",
+      "name": "AP 024",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:24",
+      "ipAddress": "10.20.0.24",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d25",
+      "name": "AP 025",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:25",
+      "ipAddress": "10.20.0.25",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d26",
+      "name": "AP 026",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:26",
+      "ipAddress": "10.20.0.26",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d27",
+      "name": "AP 027",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:27",
+      "ipAddress": "10.20.0.27",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d28",
+      "name": "AP 028",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:28",
+      "ipAddress": "10.20.0.28",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d29",
+      "name": "AP 029",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:29",
+      "ipAddress": "10.20.0.29",
+      "state": "OFFLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d30",
+      "name": "AP 030",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:30",
+      "ipAddress": "10.20.0.30",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d31",
+      "name": "AP 031",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:31",
+      "ipAddress": "10.20.0.31",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d32",
+      "name": "AP 032",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:32",
+      "ipAddress": "10.20.0.32",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d33",
+      "name": "AP 033",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:33",
+      "ipAddress": "10.20.0.33",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d34",
+      "name": "AP 034",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:34",
+      "ipAddress": "10.20.0.34",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d35",
+      "name": "AP 035",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:35",
+      "ipAddress": "10.20.0.35",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d36",
+      "name": "AP 036",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:36",
+      "ipAddress": "10.20.0.36",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d37",
+      "name": "AP 037",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:37",
+      "ipAddress": "10.20.0.37",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d38",
+      "name": "AP 038",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:38",
+      "ipAddress": "10.20.0.38",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d39",
+      "name": "AP 039",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:39",
+      "ipAddress": "10.20.0.39",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d40",
+      "name": "AP 040",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:40",
+      "ipAddress": "10.20.0.40",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d41",
+      "name": "AP 041",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:41",
+      "ipAddress": "10.20.0.41",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d42",
+      "name": "AP 042",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:42",
+      "ipAddress": "10.20.0.42",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d43",
+      "name": "AP 043",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:43",
+      "ipAddress": "10.20.0.43",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d44",
+      "name": "AP 044",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:44",
+      "ipAddress": "10.20.0.44",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d45",
+      "name": "AP 045",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:45",
+      "ipAddress": "10.20.0.45",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d46",
+      "name": "AP 046",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:46",
+      "ipAddress": "10.20.0.46",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d47",
+      "name": "AP 047",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:47",
+      "ipAddress": "10.20.0.47",
+      "state": "CONNECTION_INTERRUPTED",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d48",
+      "name": "AP 048",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:48",
+      "ipAddress": "10.20.0.48",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d49",
+      "name": "AP 049",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:49",
+      "ipAddress": "10.20.0.49",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d50",
+      "name": "AP 050",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:50",
+      "ipAddress": "10.20.0.50",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d51",
+      "name": "AP 051",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:51",
+      "ipAddress": "10.20.0.51",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d52",
+      "name": "AP 052",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:52",
+      "ipAddress": "10.20.0.52",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d53",
+      "name": "AP 053",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:53",
+      "ipAddress": "10.20.0.53",
+      "state": "UPDATING",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d54",
+      "name": "AP 054",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:54",
+      "ipAddress": "10.20.0.54",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d55",
+      "name": "AP 055",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:55",
+      "ipAddress": "10.20.0.55",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d56",
+      "name": "AP 056",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:56",
+      "ipAddress": "10.20.0.56",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d57",
+      "name": "AP 057",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:57",
+      "ipAddress": "10.20.0.57",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d58",
+      "name": "AP 058",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:58",
+      "ipAddress": "10.20.0.58",
+      "state": "OFFLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d59",
+      "name": "AP 059",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:59",
+      "ipAddress": "10.20.0.59",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d60",
+      "name": "AP 060",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:60",
+      "ipAddress": "10.20.0.60",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d61",
+      "name": "AP 061",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:61",
+      "ipAddress": "10.20.0.61",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d62",
+      "name": "AP 062",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:62",
+      "ipAddress": "10.20.0.62",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d63",
+      "name": "AP 063",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:63",
+      "ipAddress": "10.20.0.63",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d64",
+      "name": "AP 064",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:64",
+      "ipAddress": "10.20.0.64",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d65",
+      "name": "AP 065",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:65",
+      "ipAddress": "10.20.0.65",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d66",
+      "name": "AP 066",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:66",
+      "ipAddress": "10.20.0.66",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d67",
+      "name": "AP 067",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:67",
+      "ipAddress": "10.20.0.67",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d68",
+      "name": "AP 068",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:68",
+      "ipAddress": "10.20.0.68",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d69",
+      "name": "AP 069",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:69",
+      "ipAddress": "10.20.0.69",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d70",
+      "name": "AP 070",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:70",
+      "ipAddress": "10.20.0.70",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d71",
+      "name": "AP 071",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:71",
+      "ipAddress": "10.20.0.71",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d72",
+      "name": "AP 072",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:72",
+      "ipAddress": "10.20.0.72",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d73",
+      "name": "AP 073",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:73",
+      "ipAddress": "10.20.0.73",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d74",
+      "name": "AP 074",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:74",
+      "ipAddress": "10.20.0.74",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d75",
+      "name": "AP 075",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:75",
+      "ipAddress": "10.20.0.75",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d76",
+      "name": "AP 076",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:76",
+      "ipAddress": "10.20.0.76",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d77",
+      "name": "AP 077",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:77",
+      "ipAddress": "10.20.0.77",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d78",
+      "name": "AP 078",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:78",
+      "ipAddress": "10.20.0.78",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d79",
+      "name": "AP 079",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:79",
+      "ipAddress": "10.20.0.79",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d80",
+      "name": "AP 080",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:80",
+      "ipAddress": "10.20.0.80",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d81",
+      "name": "AP 081",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:81",
+      "ipAddress": "10.20.0.81",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d82",
+      "name": "AP 082",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:82",
+      "ipAddress": "10.20.0.82",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d83",
+      "name": "AP 083",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:83",
+      "ipAddress": "10.20.0.83",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d84",
+      "name": "AP 084",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:84",
+      "ipAddress": "10.20.0.84",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d85",
+      "name": "AP 085",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:85",
+      "ipAddress": "10.20.0.85",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d86",
+      "name": "AP 086",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:86",
+      "ipAddress": "10.20.0.86",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d87",
+      "name": "AP 087",
+      "model": "U6-LR",
+      "macAddress": "aa:bb:cc:00:00:87",
+      "ipAddress": "10.20.0.87",
+      "state": "OFFLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d88",
+      "name": "AP 088",
+      "model": "U6-Lite",
+      "macAddress": "aa:bb:cc:00:00:88",
+      "ipAddress": "10.20.0.88",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d89",
+      "name": "AP 089",
+      "model": "U6-Pro",
+      "macAddress": "aa:bb:cc:00:00:89",
+      "ipAddress": "10.20.0.89",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d90",
+      "name": "AP 090",
+      "model": "U6-Mesh",
+      "macAddress": "aa:bb:cc:00:00:90",
+      "ipAddress": "10.20.0.90",
+      "state": "ONLINE",
+      "features": [
+        "accessPoint"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d91",
+      "name": "Switch 091",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:00:91",
+      "ipAddress": "10.20.0.91",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d92",
+      "name": "Switch 092",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:00:92",
+      "ipAddress": "10.20.0.92",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d93",
+      "name": "Switch 093",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:00:93",
+      "ipAddress": "10.20.0.93",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d94",
+      "name": "Switch 094",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:00:94",
+      "ipAddress": "10.20.0.94",
+      "state": "CONNECTION_INTERRUPTED",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d95",
+      "name": "Switch 095",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:00:95",
+      "ipAddress": "10.20.0.95",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d96",
+      "name": "Switch 096",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:00:96",
+      "ipAddress": "10.20.0.96",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d97",
+      "name": "Switch 097",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:00:97",
+      "ipAddress": "10.20.0.97",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d98",
+      "name": "Switch 098",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:00:98",
+      "ipAddress": "10.20.0.98",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d99",
+      "name": "Switch 099",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:00:99",
+      "ipAddress": "10.20.0.99",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d100",
+      "name": "Switch 100",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:00",
+      "ipAddress": "10.20.0.100",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d101",
+      "name": "Switch 101",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:01",
+      "ipAddress": "10.20.0.101",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d102",
+      "name": "Switch 102",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:02",
+      "ipAddress": "10.20.0.102",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d103",
+      "name": "Switch 103",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:03",
+      "ipAddress": "10.20.0.103",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d104",
+      "name": "Switch 104",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:04",
+      "ipAddress": "10.20.0.104",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d105",
+      "name": "Switch 105",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:05",
+      "ipAddress": "10.20.0.105",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d106",
+      "name": "Switch 106",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:06",
+      "ipAddress": "10.20.0.106",
+      "state": "UPDATING",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d107",
+      "name": "Switch 107",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:07",
+      "ipAddress": "10.20.0.107",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d108",
+      "name": "Switch 108",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:08",
+      "ipAddress": "10.20.0.108",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d109",
+      "name": "Switch 109",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:09",
+      "ipAddress": "10.20.0.109",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d110",
+      "name": "Switch 110",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:10",
+      "ipAddress": "10.20.0.110",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d111",
+      "name": "Switch 111",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:11",
+      "ipAddress": "10.20.0.111",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d112",
+      "name": "Switch 112",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:12",
+      "ipAddress": "10.20.0.112",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d113",
+      "name": "Switch 113",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:13",
+      "ipAddress": "10.20.0.113",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d114",
+      "name": "Switch 114",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:14",
+      "ipAddress": "10.20.0.114",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d115",
+      "name": "Switch 115",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:15",
+      "ipAddress": "10.20.0.115",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d116",
+      "name": "Switch 116",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:16",
+      "ipAddress": "10.20.0.116",
+      "state": "OFFLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d117",
+      "name": "Switch 117",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:17",
+      "ipAddress": "10.20.0.117",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d118",
+      "name": "Switch 118",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:18",
+      "ipAddress": "10.20.0.118",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d119",
+      "name": "Switch 119",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:19",
+      "ipAddress": "10.20.0.119",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d120",
+      "name": "Switch 120",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:20",
+      "ipAddress": "10.20.0.120",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d121",
+      "name": "Switch 121",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:21",
+      "ipAddress": "10.20.0.121",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d122",
+      "name": "Switch 122",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:22",
+      "ipAddress": "10.20.0.122",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d123",
+      "name": "Switch 123",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:23",
+      "ipAddress": "10.20.0.123",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d124",
+      "name": "Switch 124",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:24",
+      "ipAddress": "10.20.0.124",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d125",
+      "name": "Switch 125",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:25",
+      "ipAddress": "10.20.0.125",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d126",
+      "name": "Switch 126",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:26",
+      "ipAddress": "10.20.0.126",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d127",
+      "name": "Switch 127",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:27",
+      "ipAddress": "10.20.0.127",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d128",
+      "name": "Switch 128",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:28",
+      "ipAddress": "10.20.0.128",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d129",
+      "name": "Switch 129",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:29",
+      "ipAddress": "10.20.0.129",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d130",
+      "name": "Switch 130",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:30",
+      "ipAddress": "10.20.0.130",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d131",
+      "name": "Switch 131",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:31",
+      "ipAddress": "10.20.0.131",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d132",
+      "name": "Switch 132",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:32",
+      "ipAddress": "10.20.0.132",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d133",
+      "name": "Switch 133",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:33",
+      "ipAddress": "10.20.0.133",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d134",
+      "name": "Switch 134",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:34",
+      "ipAddress": "10.20.0.134",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d135",
+      "name": "Switch 135",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:35",
+      "ipAddress": "10.20.0.135",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d136",
+      "name": "Switch 136",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:36",
+      "ipAddress": "10.20.0.136",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d137",
+      "name": "Switch 137",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:37",
+      "ipAddress": "10.20.0.137",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d138",
+      "name": "Switch 138",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:38",
+      "ipAddress": "10.20.0.138",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d139",
+      "name": "Switch 139",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:39",
+      "ipAddress": "10.20.0.139",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d140",
+      "name": "Switch 140",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:40",
+      "ipAddress": "10.20.0.140",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d141",
+      "name": "Switch 141",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:41",
+      "ipAddress": "10.20.0.141",
+      "state": "CONNECTION_INTERRUPTED",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d142",
+      "name": "Switch 142",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:42",
+      "ipAddress": "10.20.0.142",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d143",
+      "name": "Switch 143",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:43",
+      "ipAddress": "10.20.0.143",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": true
+    },
+    {
+      "id": "demo-d144",
+      "name": "Switch 144",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:44",
+      "ipAddress": "10.20.0.144",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d145",
+      "name": "Switch 145",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:45",
+      "ipAddress": "10.20.0.145",
+      "state": "OFFLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d146",
+      "name": "Switch 146",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:46",
+      "ipAddress": "10.20.0.146",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d147",
+      "name": "Switch 147",
+      "model": "USW-Pro-24",
+      "macAddress": "aa:bb:cc:00:01:47",
+      "ipAddress": "10.20.0.147",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d148",
+      "name": "Switch 148",
+      "model": "USW-Lite-8-PoE",
+      "macAddress": "aa:bb:cc:00:01:48",
+      "ipAddress": "10.20.0.148",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d149",
+      "name": "Switch 149",
+      "model": "USW-24-PoE",
+      "macAddress": "aa:bb:cc:00:01:49",
+      "ipAddress": "10.20.0.149",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    },
+    {
+      "id": "demo-d150",
+      "name": "Switch 150",
+      "model": "USW-Flex-Mini",
+      "macAddress": "aa:bb:cc:00:01:50",
+      "ipAddress": "10.20.0.150",
+      "state": "ONLINE",
+      "features": [
+        "switching"
+      ],
+      "firmwareUpdatable": false
+    }
+  ],
+  "health": [
+    {
+      "subsystem": "wlan",
+      "num_user": 187,
+      "num_guest": 9,
+      "num_iot": 41
+    },
+    {
+      "subsystem": "lan",
+      "num_user": 64,
+      "num_guest": 0,
+      "num_iot": 12
+    },
+    {
+      "subsystem": "www",
+      "latency": 6,
+      "uptime": 863000
+    },
+    {
+      "subsystem": "wan",
+      "status": "ok",
+      "wan_ip": "203.0.113.10",
+      "gateways": [
+        "203.0.113.1"
+      ],
+      "isp_name": "Demo Fiber",
+      "asn": 64500,
+      "gw_system-stats": {
+        "uptime": 864000
+      },
+      "uptime_stats": {
+        "WAN": {
+          "availability": 99.98,
+          "latency_average": 4,
+          "uptime": 863000,
+          "time_period": 86400
+        },
+        "WAN2": {
+          "availability": 0,
+          "downtime": 863900,
+          "time_period": 86400
+        }
+      }
+    }
+  ]
+}

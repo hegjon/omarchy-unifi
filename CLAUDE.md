@@ -102,5 +102,9 @@ Omarchy bar-widget plugin. This checkout *is* the installed plugin
   — the UUID goes **unquoted** (quoted means STRING and the filter wants
   UUID; checked against Network 10.5.67), with one plain /sites page (the
   API's default limit, 25) as fallback for controllers without filtering.
+  The gateway id rides the same way (`--gateway=<id>`): an oversized poll
+  fetches it via `GET /sites/{id}/devices/{deviceId}` (bare device object)
+  and re-verifies it still normalizes as a gateway; the page hunt runs only
+  when that is missing or stale.
 - Style follows hegjon.prusa-connect: comments explain *why*; imperative
   commit subjects; version lives in `manifest.json`; annotated `vX.Y.Z` tags.

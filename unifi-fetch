@@ -6,7 +6,7 @@
 # stores which site by id; the name and classic-API reference come from
 # /sites.
 #
-# Usage: unifi-fetch [--site=<id> --site-ref=<reference>]
+# Usage: unifi-fetch [--site=<id> --site-ref=<reference>] [--gateway=<id>]
 #
 # The widget hands back the site it learned from an earlier poll, so only
 # the first poll after a (re)start — or any run without the flags — asks
@@ -25,10 +25,20 @@
 set -uo pipefail
 umask 077
 
+# Page stride for the oversized-site gateway hunt; the list fetches ask for
+# their own caps instead.
 readonly PAGE_LIMIT=200
+# The widget is a quick look at a small network. Up to MAX_DEVICES devices
+# are listed; past that the popup falls back to the device count, the
+# controller version and the gateway alone. The caps also bound what a
+# controller can make the fetch accumulate — see the byte budget in
+# fetch_all.
+readonly MAX_DEVICES=75
 # Pages per list: a backstop against a controller that keeps paging while
 # claiming a total the pages never reach.
 readonly MAX_PAGES=5
+# How far the gateway hunt pages into an oversized site before giving up.
+readonly MAX_SCAN_PAGES=25
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
@@ -45,11 +55,13 @@ unifi_require_commands
 
 KNOWN_SITE=""
 KNOWN_REF=""
+KNOWN_GATEWAY=""
 for arg in "$@"; do
   case "$arg" in
     --site=*) KNOWN_SITE="${arg#--site=}" ;;
     --site-ref=*) KNOWN_REF="${arg#--site-ref=}" ;;
-    *) die "unifi-fetch takes only --site=<id> and --site-ref=<reference>" ;;
+    --gateway=*) KNOWN_GATEWAY="${arg#--gateway=}" ;;
+    *) die "unifi-fetch takes only --site=<id>, --site-ref=<reference> and --gateway=<id>" ;;
   esac
 done
 
@@ -61,12 +73,19 @@ API_KEY="$(unifi_api_key)"
 # directly, not inside $(...): a failure has to end the whole script, and
 # `exit` inside a command substitution ends only the subshell — the error JSON
 # would be captured as if it were data.
+# A list the controller claims is larger than max-items is not fetched at
+# all: FETCHED stays empty and FETCH_OVERFLOW carries the claimed total, so
+# the caller decides whether that is fatal or the cue for a reduced view.
 FETCHED='[]'
-fetch_all() { # path
+FETCH_OVERFLOW=0
+fetch_all() { # path max-items
   local offset=0 total items all='[]' reason pages=0
+  FETCH_OVERFLOW=0
   while :; do
     (( pages++ < MAX_PAGES )) || die "The controller keeps paging $1 without end"
-    unifi_http "$1?offset=$offset&limit=$PAGE_LIMIT" "$API_KEY"
+    # Ask for exactly as many as the caller is prepared to hold: a site
+    # within the cap arrives in one page.
+    unifi_http "$1?offset=$offset&limit=$2" "$API_KEY"
     if reason=$(unifi_describe_http_failure); then
       case "$UNIFI_HTTP_CODE" in
         401|403) die_needs_login "$reason" ;;
@@ -78,6 +97,11 @@ fetch_all() { # path
     items=$(jq -c '.data | length' <<<"$UNIFI_HTTP_BODY")
     total=$(jq -r '.totalCount // 0' <<<"$UNIFI_HTTP_BODY")
     [[ $total =~ ^[0-9]+$ ]] || total=0
+    if (( total > $2 )); then
+      FETCHED='[]'
+      FETCH_OVERFLOW=$total
+      return 0
+    fi
     # Both inputs reach jq on stdin: spliced into argv, a page would be
     # capped by the kernel's argument-size limit instead of by us, and the
     # merge would fail confusingly on any page past ~128 KB.
@@ -90,6 +114,34 @@ fetch_all() { # path
     (( items > 0 && offset < total )) || break
   done
   FETCHED="$all"
+}
+
+# When a site is too big to list, the gateway is still worth showing: it is
+# what the graphs and WAN lines hang off. Page through the devices for the
+# one normalize.jq would pick — the same logic the full view uses — holding
+# one page at a time and keeping only the match. The reduced view works
+# without a gateway, so a failure here ends the hunt, not the fetch.
+FOUND_GATEWAY='[]'
+find_gateway() { # devices-path
+  local offset=0 pages=0 items gw_id
+  FOUND_GATEWAY='[]'
+  while (( pages++ < MAX_SCAN_PAGES )); do
+    unifi_http "$1?offset=$offset&limit=$PAGE_LIMIT" "$API_KEY"
+    [[ $UNIFI_HTTP_CODE == 200 ]] || return 0
+    jq -e '.data | type == "array"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY" || return 0
+    items=$(jq -c '.data | length' <<<"$UNIFI_HTTP_BODY")
+    (( items > 0 )) || return 0
+    gw_id=$(jq -c '{devices: .data}' <<<"$UNIFI_HTTP_BODY" |
+      jq -r -f "$NORMALIZE" 2>/dev/null | jq -r '.gateway.id // empty' 2>/dev/null)
+    if [[ -n $gw_id ]]; then
+      # normalize falls back to the MAC when a device has no id, so the
+      # match does the same.
+      FOUND_GATEWAY=$(jq -c --arg id "$gw_id" \
+        '[.data[] | select((.id // .macAddress // "") == $id)][:1]' <<<"$UNIFI_HTTP_BODY")
+      return 0
+    fi
+    (( offset += items ))
+  done
 }
 
 # The config pins the site by id — a rename or typo fix on the controller
@@ -139,11 +191,36 @@ if [[ -z $site ]]; then
   fi
 fi
 
-fetch_all "/sites/$site_id/devices"
+fetch_all "/sites/$site_id/devices" "$MAX_DEVICES"
 devices="$FETCHED"
+device_total=$FETCH_OVERFLOW
+if (( device_total > 0 )); then
+  # More devices than the widget lists: the popup gets the claimed count, a
+  # link to the controller, and the gateway if the hunt finds one.
+  # The widget hands back the gateway id it learned from an earlier poll, so
+  # only the first oversized poll — or one whose remembered gateway went
+  # stale — has to hunt through the device pages. The id is honored only
+  # with a matching site, and the fetched device must still look like a
+  # gateway: a stale id could name any device on this site.
+  devices='[]'
+  if [[ -n $KNOWN_SITE && $KNOWN_SITE == "$site_id" ]] && unifi_is_token "$KNOWN_GATEWAY"; then
+    unifi_http "/sites/$site_id/devices/$KNOWN_GATEWAY" "$API_KEY"
+    if [[ $UNIFI_HTTP_CODE == 200 ]] && jq -e 'type == "object"' >/dev/null 2>&1 <<<"$UNIFI_HTTP_BODY"; then
+      gid=$(jq -c '{devices: [.]}' <<<"$UNIFI_HTTP_BODY" |
+        jq -r -f "$NORMALIZE" 2>/dev/null | jq -r '.gateway.id // empty' 2>/dev/null)
+      [[ -n $gid ]] && devices=$(jq -c '[.]' <<<"$UNIFI_HTTP_BODY")
+    fi
+  fi
+  if [[ $devices == '[]' ]]; then
+    find_gateway "/sites/$site_id/devices"
+    devices="$FOUND_GATEWAY"
+  fi
+fi
 
 raw=$(jq -n --argjson site "$site" --argjson devices "$devices" \
-  '{site: $site, devices: $devices}')
+  --argjson total "$device_total" \
+  '{site: $site, devices: $devices}
+   + (if $total > 0 then {deviceTotal: $total} else {} end)')
 
 # The gateway's own statistics (WAN rates, load, uptime) are one more request,
 # for one device only, and are worth it: they are what the panel graphs. The
@@ -221,8 +298,10 @@ unset API_KEY
 
 # $site_name is the token-checked reference (empty when unusable): what the
 # widget gets to hand back on the next poll's argv is only ever that, never
-# the controller's raw string.
+# the controller's raw string. The controller URL is the user's own config,
+# passed along so the oversized view can link to the real device list.
 jq --argjson stats "$stats" --argjson report "$report" --argjson wans "$wans" --argjson health "$health" \
-  --arg siteRef "$site_name" \
-  '. + {stats: $stats, report: $report, wans: $wans, health: $health, siteRef: $siteRef}' <<<"$raw" |
+  --arg siteRef "$site_name" --arg controllerUrl "$UNIFI_URL" \
+  '. + {stats: $stats, report: $report, wans: $wans, health: $health,
+        siteRef: $siteRef, controllerUrl: $controllerUrl}' <<<"$raw" |
   jq -f "$NORMALIZE" 2>/dev/null || die "Could not interpret the controller response"

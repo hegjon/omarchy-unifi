@@ -216,6 +216,40 @@ else
 fi
 
 echo
+echo "oversized site"
+# Past the fetcher's device cap the document carries the controller's claim
+# instead of a list; the flag tells the widget why the lists are empty.
+oversized='{"deviceTotal":5000,"controllerUrl":"https://demo","site":{"name":"Big"},
+  "devices":[{"id":"g","name":"GW","model":"UCG-Ultra","state":"ONLINE","features":["switching"]}],"clients":[],
+  "health":[{"subsystem":"wlan","num_user":9,"num_guest":0,"num_iot":1},
+            {"subsystem":"lan","num_user":5,"num_guest":0,"num_iot":0}]}'
+if jq -f "$NORMALIZE" <<<"$oversized" |
+   jq -e '.oversized == true and .summary.devices == 5000
+          and .controller.url == "https://demo"
+          and .gateway.name == "GW"' >/dev/null 2>&1; then
+  printf '  ok    reports the claimed count, controller link and gateway\n'; (( passed++ ))
+else
+  printf '  FAIL  reports the claimed count, controller link and gateway\n'; (( failed++ ))
+fi
+# Client counts come from the health rows (users + guests + IoT per band);
+# the total is their sum so the summary always adds up, and no VPN figure
+# exists there.
+if jq -f "$NORMALIZE" <<<"$oversized" |
+   jq -e '.summary.clients == 15 and .summary.wireless == 10
+          and .summary.wired == 5' >/dev/null 2>&1; then
+  printf '  ok    takes client counts from the health rows\n'; (( passed++ ))
+else
+  printf '  FAIL  takes client counts from the health rows\n'; (( failed++ ))
+fi
+if jq -f "$NORMALIZE" <<<"$(jq -c 'del(.health)' <<<"$oversized")" |
+   jq -e '.summary.clients == null and .summary.wireless == null and .summary.wired == null' >/dev/null 2>&1; then
+  printf '  ok    counts are null, not zero, without a health report\n'; (( passed++ ))
+else
+  printf '  FAIL  counts are null, not zero, without a health report\n'; (( failed++ ))
+fi
+check "a normal document is not oversized" network.json '.oversized == false and .controller == null'
+
+echo
 echo "degenerate input"
 for payload in '{}' '{"devices":[]}' '{"devices":[{}],"clients":[{}]}'; do
   if out=$(jq -f "$NORMALIZE" <<<"$payload" 2>&1); then

@@ -43,6 +43,7 @@ mkdir -p "$HOME"
 cat >"$work/stub.py" <<'PY'
 import json, os, sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlparse
 
 fixture = json.load(open(os.environ["STUB_FIXTURE"]))
 sites = json.loads(os.environ["STUB_SITES"])
@@ -69,16 +70,30 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, {"data": [
                 {"subsystem": "wlan", "num_user": 9, "num_guest": 0, "num_iot": 1},
                 {"subsystem": "lan", "num_user": 5, "num_guest": 0, "num_iot": 0}]})
+        if "/devices/" in p and not p.endswith("/statistics/latest"):
+            did = p.rsplit("/", 1)[-1]
+            for d in fixture["devices"]:
+                if d["id"] == did:
+                    return self._send(200, d)
+            return self._send(404, {"error": "no such device"})
         if p.endswith("/devices"):
             items = fixture["devices"]
             if mode == "endless":
-                # Always one more page than has been fetched.
-                return self._send(200, {"data": items, "totalCount": 10**9})
+                # A plausible total that the served pages never reach.
+                return self._send(200, {"data": items, "totalCount": 70})
             if mode == "bulky":
                 # Each page stays under the per-response limit; two of
                 # them together do not.
                 fat = [dict(items[0], pad="x" * 15000) for _ in range(40)]
-                return self._send(200, {"data": fat, "totalCount": 200})
+                return self._send(200, {"data": fat, "totalCount": 75})
+            if mode == "manydevices":
+                # A site past the device cap, with the gateway not
+                # surfacing until the third page of the hunt.
+                offset = int(parse_qs(urlparse(self.path).query).get("offset", ["0"])[0])
+                gw = [d for d in items if "UCG" in (d.get("model") or "")]
+                rest = [d for d in items if d not in gw]
+                page = (rest * 200)[:200] if offset < 400 else (gw + rest * 200)[:200]
+                return self._send(200, {"data": page, "totalCount": 5000})
             if mode == "huge":
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -196,6 +211,38 @@ if jq -e '.error | test("without end")' >/dev/null 2>&1 <<<"$out" \
   ok "stops following pages after a bounded number"
 else
   fail "stops following pages after a bounded number" "$out ($(grep -c devices "$work/requests") device requests)"
+fi
+stop_stub
+
+# More devices than the cap degrades instead of dying: the claimed count,
+# the controller version from /info, the gateway hunted down by paging, and
+# client counts from the health rows — with the client list never requested.
+start_stub "$good_sites" manydevices
+out=$(timeout 60 "$PLUGIN_DIR/unifi-fetch")
+if jq -e '.error == null and .oversized == true and .summary.devices == 5000
+          and (.devices | length) == 1 and .devices[0].kind == "gateway"
+          and (.controller.url | startswith("http://127.0.0.1:"))
+          and .summary.clients == 15 and .summary.wireless == 10
+          and .summary.wired == 5' >/dev/null 2>&1 <<<"$out" \
+   && ! grep -q clients "$work/requests" && ! grep -qF '/info' "$work/requests"; then
+  ok "falls back to controller and gateway details on an oversized site"
+else
+  fail "falls back to controller and gateway details on an oversized site" "${out:0:300}"
+fi
+
+# A second poll handed the gateway id — as the widget does — must fetch it
+# by id instead of hunting the device pages again: it may add exactly one
+# more page request (its own overflow probe) plus the by-id request.
+hunt_pages=$(grep -cF 'devices?' "$work/requests")
+out2=$(timeout 60 "$PLUGIN_DIR/unifi-fetch" \
+  "--site=$(jq -r '.site.id' <<<"$out")" "--site-ref=$(jq -r '.site.ref' <<<"$out")" \
+  "--gateway=$(jq -r '.gateway.id' <<<"$out")")
+if jq -e '.error == null and .oversized == true and .devices[0].kind == "gateway"' >/dev/null 2>&1 <<<"$out2" \
+   && (( $(grep -cF 'devices?' "$work/requests") == hunt_pages + 1 )) \
+   && grep -q 'devices/d4' "$work/requests"; then
+  ok "a poll handed the gateway id skips the hunt"
+else
+  fail "a poll handed the gateway id skips the hunt" "${out2:0:200} ($(grep -cF 'devices?' "$work/requests") vs $hunt_pages page requests)"
 fi
 stop_stub
 

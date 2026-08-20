@@ -167,6 +167,7 @@ def health_clients:
       }
   ) | sort_by(sort_key)) as $devices
 | ($devices | map(select(.kind == "gateway")) | .[0] // null) as $gateway
+| (as_number(.deviceTotal) // 0) as $device_total
 | (health_clients // {clients: null, wireless: null, wired: null}) as $hc
 | {
     # ref is the classic-API reference as vetted by the fetch; the widget
@@ -174,12 +175,19 @@ def health_clients:
     site: {id: ($site.id // ""), name: ($site.name // $site.internalReference // ""),
            ref: (.siteRef // "")},
     devices: $devices,
+    # A site past the fetcher's device cap: devices holds at most the
+    # gateway, the count below is the controller's claim, and clients were
+    # never asked for.
+    oversized: ($device_total > 0),
+    # The url is the user's configured controller address (not controller
+    # data); the oversized view links to its device list.
+    controller: (if $device_total > 0 then {url: (.controllerUrl // "")} else null end),
     # The first gateway is the one whose statistics are fetched and graphed.
     gateway: (if $gateway == null then null
               else {id: $gateway.id, name: $gateway.name, stats: $stats,
                     history: report_history($gateway.mac), wan: $wan} end),
     summary: {
-      devices: ($devices | length),
+      devices: (if $device_total > 0 then $device_total else ($devices | length) end),
       online: ($devices | map(select(.bucket == "online")) | length),
       offline: ($devices | map(select(.bucket == "offline")) | length),
       busy: ($devices | map(select(.bucket == "busy")) | length),
