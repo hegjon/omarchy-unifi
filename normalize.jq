@@ -22,10 +22,12 @@ def bucket:
 # Which role a device plays. The API's features enum is switching, accessPoint
 # and gateway, but a UCG Fiber on Network 10.5 reports only "switching", so
 # the model name is the fallback tell for Ubiquiti's gateway lines (Dream
-# Machine, Cloud Gateway, Security Gateway, Express, …).
+# Machine, Cloud Gateway, Security Gateway, Express, …). A generation digit
+# can follow the prefix with no separator — a Dream Router 7 reports "UDR7" —
+# so a bare digit counts as a boundary too.
 def is_gateway:
   ((.features // []) | index("gateway")) != null
-  or ((.model // "") | test("^(UDM|UCG|UXG|USG|UDR|UDW|UX|EFG)([- ]|$)|Dream|Gateway|Fortress|Express"; "i"));
+  or ((.model // "") | test("^(UDM|UCG|UXG|USG|UDR|UDW|UX|EFG)([- ]|[0-9]|$)|Dream|Gateway|Fortress|Express"; "i"));
 
 def kind:
   if is_gateway then "gateway"
