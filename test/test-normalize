@@ -71,6 +71,16 @@ check "classifies switches" network.json \
 # A gateway also reports "switching", so it is told apart by model.
 check "classifies a Cloud Gateway as a gateway despite its switching feature" network.json \
   '(first(.devices[] | select(.name == "Gateway")) | .kind == "gateway")'
+# A Dream Router 7 reports its model as "UDR7": a generation digit with no
+# separator after the prefix.
+if jq -f "$NORMALIZE" <<<'{"devices":[{"id":"d","name":"Dream Router","model":"UDR7","state":"ONLINE","features":["switching","accessPoint"]}]}' |
+   jq -e '.devices[0].kind == "gateway"' >/dev/null 2>&1; then
+  printf '  ok    classifies a UDR7 as a gateway despite no gateway feature\n'
+  (( passed++ ))
+else
+  printf '  FAIL  classifies a UDR7 as a gateway despite no gateway feature\n'
+  (( failed++ ))
+fi
 
 echo
 echo "ordering"
